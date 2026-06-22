@@ -56,7 +56,7 @@ targets:
     mode: development
     default: true
     workspace:
-      host: "https://adb-7405608678264076.16.azuredatabricks.net/"
+      host: "https://adb-2013382429548984.4.azuredatabricks.net/"
       auth_type: azure-cli
     variables:
       keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-databrickskit-dev-uksouth-01/providers/Microsoft.KeyVault/vaults/kv-dbk-dev-cind-01"
@@ -69,7 +69,7 @@ targets:
     presets:
       name_prefix: "${bundle.target}_"
     workspace:
-      host: "https://adb-7405608678264076.16.azuredatabricks.net/"
+      host: "https://adb-2013382429548984.4.azuredatabricks.net/"
     variables:
       keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-databrickskit-dev-uksouth-01/providers/Microsoft.KeyVault/vaults/kv-dbk-dev-cind-01"
       keyvault_dns_name: "https://kv-dbk-dev-cind-01.vault.azure.net/"
@@ -81,7 +81,7 @@ targets:
     presets:
       name_prefix: "${bundle.target}_"
     workspace:
-      host: "https://adb-7405608678264076.16.azuredatabricks.net/"
+      host: "https://adb-2013382429548984.4.azuredatabricks.net/"
     variables:
       keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-databrickskit-dev-uksouth-01/providers/Microsoft.KeyVault/vaults/kv-dbk-dev-cind-01"
       keyvault_dns_name: "https://kv-dbk-dev-cind-01.vault.azure.net/"
