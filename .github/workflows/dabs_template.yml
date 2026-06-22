@@ -54,15 +54,15 @@ jobs:
       - name: Setup Databricks CLI
         uses: databricks/setup-cli@main
 
-      # --------------------------------------------------------------
-      # Authenticate Azure CLI
-      # --------------------------------------------------------------
-      - name: Azure CLI login
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant-id: ${{ secrets.ARM_TENANT_ID }}
-          client-secret: ${{ secrets.ARM_CLIENT_SECRET }}
+      # # --------------------------------------------------------------
+      # # Authenticate Azure CLI
+      # # --------------------------------------------------------------
+      # - name: Azure CLI login
+      #   uses: azure/login@v1
+      #   with:
+      #     client-id: ${{ secrets.ARM_CLIENT_ID }}
+      #     tenant-id: ${{ secrets.ARM_TENANT_ID }}
+      #     client-secret: ${{ secrets.ARM_CLIENT_SECRET }}
 
       # --------------------------------------------------------------
       # Validate Databricks Asset Bundle
