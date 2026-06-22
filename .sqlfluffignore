@@ -1,0 +1,5 @@
+./data_platform/02_transformation/dbt/databricks_starter_kit/dbt_packages
+./data_platform/02_transformation/dbt/databricks_starter_kit/logs
+./data_platform/02_transformation/dbt/databricks_starter_kit/target
+./data_platform/02_transformation/dbt/databricks_starter_kit/macros
+./data_platform/02_transformation/dbt/databricks_starter_kit/tests

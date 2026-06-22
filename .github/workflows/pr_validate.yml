@@ -1,0 +1,27 @@
+name: PR - Validate
+
+# ----------------------------------------------------------------------
+# Purpose:
+#   - Triggered on Pull Requests targeting the `main` branch
+#   - Validates Databricks Asset Bundle configuration for the DEV environment
+#   - Checks bundle syntax, variable resolution, and resource definitions
+#   - Ensures any changes in `data_platform/03_orchestration/` are validated before merge
+# ----------------------------------------------------------------------
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'data_platform/03_orchestration/**'
+
+jobs:
+  validate-dev:
+    uses: ./.github/workflows/dabs_template.yml
+    with:
+      environment: dev
+      deploy: false
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.DEV_ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.DEV_ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}

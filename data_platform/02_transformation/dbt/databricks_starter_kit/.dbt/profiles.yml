@@ -1,0 +1,10 @@
+databricks_starter_kit:
+  target: dev
+  outputs:
+    dev:
+      type: databricks
+      host: #enter your host
+      http_path: /sql/1.0/warehouses/ae1b59d20c4c7857
+      auth_type: 'oauth'
+      catalog: analytics_dev_core
+      schema: dev

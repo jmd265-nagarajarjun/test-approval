@@ -1,0 +1,102 @@
+# ==============================================================
+# Template: dabs-validate-deploy.yml
+# Purpose:
+#   - Reusable template for Databricks Asset Bundles
+#   - Supports validation and optional deployment
+# ==============================================================
+
+parameters:
+  - name: environment
+    type: string
+
+  - name: environmentResource
+    type: string
+    default: ''
+
+  - name: deploy
+    type: boolean
+    default: false
+
+
+jobs:
+- deployment: DABS_${{ parameters.environment }}
+  displayName: "DABS Validate / Deploy (${{ parameters.environment }})"
+  ${{ if ne(parameters.environmentResource, '') }}:
+    environment: ${{ parameters.environmentResource }}
+  ${{ if eq(parameters.environmentResource, '') }}:
+    environment: ${{ parameters.environment }}
+
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        # ------------------------------------------------------------
+        # Checkout source code
+        # ------------------------------------------------------------
+        - checkout: self
+
+        # ------------------------------------------------------------
+        # Install Databricks CLI
+        # ------------------------------------------------------------
+        - script: |
+            curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | bash
+            databricks --version
+          displayName: "Install Databricks CLI"
+
+        # ------------------------------------------------------------
+        # Validate Bundle
+        # ------------------------------------------------------------
+        - script: |
+            echo "Validating bundle for environment: ${{ parameters.environment }}"
+            databricks bundle validate --target ${{ parameters.environment }}
+          workingDirectory: data_platform/03_orchestration
+          displayName: "Validate Databricks Bundle"
+          env:
+            ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+            ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+            ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+        # ------------------------------------------------------------
+        # Plan Bundle
+        # ------------------------------------------------------------
+        - script: |
+            echo "Planning bundle for environment: ${{ parameters.environment }}"
+            databricks bundle plan --target ${{ parameters.environment }}
+          workingDirectory: data_platform/03_orchestration
+          displayName: "Plan Databricks Bundle"
+          env:
+            ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+            ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+            ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+        # ------------------------------------------------------------
+        # Summary Bundle
+        # ------------------------------------------------------------
+        - script: |
+            echo "Summarizing bundle for environment: ${{ parameters.environment }}"
+            databricks bundle summary --target ${{ parameters.environment }}
+          workingDirectory: data_platform/03_orchestration
+          displayName: "Summarize Databricks Bundle"
+          env:
+            ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+            ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+            ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+        # ------------------------------------------------------------
+        # Deploy Bundle (Optional)
+        # ------------------------------------------------------------
+        - script: |
+            echo "Deploying bundle to environment: ${{ parameters.environment }}"
+            databricks bundle deploy \
+              --target ${{ parameters.environment }} \
+              --force-lock
+          workingDirectory: data_platform/03_orchestration
+          displayName: "Deploy Databricks Bundle"
+          condition: and(succeeded(), eq('${{ parameters.deploy }}', 'true'))
+          env:
+            ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+            ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+            ARM_TENANT_ID: $(ARM_TENANT_ID)

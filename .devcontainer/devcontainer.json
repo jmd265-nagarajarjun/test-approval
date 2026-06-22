@@ -1,0 +1,62 @@
+{
+    "name": "Databricks Development Container",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {
+            "version": "latest"
+        },
+        "ghcr.io/prulloac/devcontainer-features/commitizen:1": {},
+        "ghcr.io/devcontainers-extra/features/lefthook-asdf:1": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/azure-cli:1": {}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "innoverio.vscode-dbt-power-user",
+                "ms-azuretools.vscode-docker",
+                "dorzey.vscode-sqlfluff",
+                "streetsidesoftware.code-spell-checker",
+                "eamodio.gitlens",
+                "wholroyd.jinja",
+                "vivaxy.vscode-conventional-commits",
+                "ms-python.python",
+                "bastienboutonnet.vscode-dbt",
+                "ms-azuretools.vscode-docker",
+                "databricks.databricks"
+            ],
+            "settings": {
+                "files.associations": {
+                    "*.sql": "jinja-sql",
+                    "*.yml": "jinja-yaml"
+                },
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.linting.enabled": true,
+                "python.linting.pylintEnabled": true,
+                "editor.formatOnSave": true,
+                "dbt.enableNewLineagePanel": true,
+                "dbt.powerUser.sqlDialect": "ansi",
+                "dbt.powerUser.enableSyntaxCheck": true,
+                "dbt.powerUser.enableHover": true,
+                "dbt.powerUser.projectDir": "/workspaces/${localWorkspaceFolderBasename}/data_platform/02_transform/dbt/databricks_starter_kit/models"
+            }
+        }
+    },
+    "containerEnv": {
+        "DBT_PROJECT_DIR": "/workspaces/${localWorkspaceFolderBasename}/data_platform/02_transformation/dbt/databricks_starter_kit",
+        "DBT_PROFILES_DIR": "/workspaces/${localWorkspaceFolderBasename}/data_platform/02_transformation/dbt/databricks_starter_kit/.dbt",
+        "DBT_SEND_ANONYMOUS_USAGE_STATS": "False",
+        "DBT_USER": "${localEnv:USER}",
+        "TARGET_ENV": "dev",
+        "DATABRICKS_SP_CLIENT_ID": "",
+        "DATABRICKS_SP_CLIENT_SECRET": ""
+    },
+    "postCreateCommand": "git config --global core.autocrlf input && git config --global core.fileMode false && pre-commit install && pre-commit install --hook-type commit-msg --hook-type pre-push",
+    "postStartCommand": "sh -c \"git config core.editor 'code --wait --reuse-window' && git config credential.useHttpPath true && git config pull.rebase true\"",
+    "remoteUser": "root"
+}

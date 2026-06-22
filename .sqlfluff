@@ -1,0 +1,9 @@
+[sqlfluff]
+exclude_rules = LT05, LT02
+templater = dbt
+dialect = mysql
+max_line_length = 150
+
+[sqlfluff:templater:dbt]
+project_dir = ./data_platform/02_transformation/dbt/databricks_starter_kit
+profiles_dir = ./data_platform/02_transformation/dbt/databricks_starter_kit/.dbt

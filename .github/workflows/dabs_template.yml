@@ -1,0 +1,94 @@
+name: DABS - Validate / Deploy Template
+
+# ----------------------------------------------------------------------
+# Purpose:
+#   - Reusable workflow for Databricks Asset Bundles
+#   - Supports both validation and deployment
+#   - Behavior controlled via input parameters
+# ----------------------------------------------------------------------
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Databricks bundle target environment (dev | uat | prod)"
+        required: true
+        type: string
+
+      deploy:
+        description: "Whether to deploy the bundle (true = deploy, false = validate only)"
+        required: true
+        type: boolean
+
+    secrets:
+      ARM_CLIENT_ID:
+        required: true
+      ARM_CLIENT_SECRET:
+        required: true
+      ARM_TENANT_ID:
+        required: true
+
+jobs:
+  dabs:
+
+    runs-on: ubuntu-latest
+
+    # ------------------------------------------------------------------
+    # Environment Variables
+    # ------------------------------------------------------------------
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+    steps:
+      # --------------------------------------------------------------
+      # Checkout source code
+      # --------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --------------------------------------------------------------
+      # Install Databricks CLI
+      # --------------------------------------------------------------
+      - name: Setup Databricks CLI
+        uses: databricks/setup-cli@main
+
+      # --------------------------------------------------------------
+      # Validate Databricks Asset Bundle
+      # --------------------------------------------------------------
+      - name: Validate Databricks Bundle
+        run: |
+          echo "Validating bundle for environment: ${{ inputs.environment }}"
+          databricks bundle validate --target ${{ inputs.environment }}
+        working-directory: data_platform/03_orchestration/
+
+      # --------------------------------------------------------------
+      # Plan Databricks Asset Bundle
+      # --------------------------------------------------------------
+      - name: Plan Databricks Bundle
+        run: |
+          echo "Planning bundle for environment: ${{ inputs.environment }}"
+          databricks bundle plan --target ${{ inputs.environment }}
+        working-directory: data_platform/03_orchestration/
+
+      # --------------------------------------------------------------
+      # Summary Databricks Asset Bundle
+      # --------------------------------------------------------------
+      - name: Summarize Databricks Bundle
+        run: |
+          echo "Summarizing bundle for environment: ${{ inputs.environment }}"
+          databricks bundle summary --target ${{ inputs.environment }}
+        working-directory: data_platform/03_orchestration/
+
+      # --------------------------------------------------------------
+      # Deploy Databricks Asset Bundle (Optional)
+      # --------------------------------------------------------------
+      - name: Deploy Databricks Bundle
+        if: ${{ inputs.deploy }}
+        run: |
+          echo "Deploying bundle to environment: ${{ inputs.environment }}"
+          databricks bundle deploy \
+            --target ${{ inputs.environment }} \
+            --force-lock
+        working-directory: data_platform/03_orchestration/

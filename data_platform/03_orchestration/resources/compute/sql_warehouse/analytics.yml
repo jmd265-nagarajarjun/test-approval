@@ -1,0 +1,22 @@
+resources:
+  sql_warehouses:
+    analytics:
+      name: analytics_wh
+      warehouse_type: PRO
+      enable_serverless_compute: true
+      cluster_size: X-Small
+      min_num_clusters: 1
+      max_num_clusters: 1
+      auto_stop_mins: 25
+      spot_instance_policy: COST_OPTIMIZED
+      tags:
+        custom_tags:
+        - key: Environment
+          value: ${bundle.target}
+        - key: Bundle
+          value: ${bundle.name}
+        - key: Provisioned By
+          value: DABS
+      permissions:
+      - user_name: nagarajarjun@jmangroup.com
+        level: CAN_MANAGE

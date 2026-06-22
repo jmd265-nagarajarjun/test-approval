@@ -1,0 +1,7 @@
+FROM mcr.microsoft.com/devcontainers/python:3.11
+
+COPY requirements.txt /tmp/requirements.txt
+
+RUN python -m pip install --no-cache-dir -r /tmp/requirements.txt
+
+RUN curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh

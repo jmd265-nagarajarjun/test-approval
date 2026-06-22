@@ -1,0 +1,45 @@
+# ==============================================================
+# Pipeline: PR - Validate
+# Purpose:
+#   - Triggered on Pull Requests targeting main
+#   - Validates Databricks Asset Bundle for DEV
+#   - Does NOT deploy
+#
+# IMPORTANT:
+#   Requires Variable Group:
+#     DEV-Databricks-Secrets
+#
+#   Variable Group must contain:
+#     - ARM_CLIENT_ID     (secret)
+#     - ARM_CLIENT_SECRET (secret)
+#     - ARM_TENANT_ID     (secret)
+# ==============================================================
+
+trigger: none   # No push trigger
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - data_platform/03_orchestration/*
+
+
+stages:
+
+# ======================================================
+# PR Validation Stage
+# ======================================================
+- stage: PR_VALIDATE
+  displayName: "PR - Validate Bundle (DEV)"
+
+  variables:
+  - group: DEV-Databricks-Secrets
+  - group: ARM-Tenant
+
+  jobs:
+  - template: dabs_template.yml
+    parameters:
+      environment: dev
+      deploy: false

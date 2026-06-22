@@ -1,0 +1,26 @@
+name: CD Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  # Approval gate - pauses here until reviewer approves
+  approval:
+    runs-on: ubuntu-latest
+    environment: prod-approval
+    steps:
+      - run: echo "Approved for PROD deployment"
+
+  # Deploy to PROD - only runs after approval
+  deploy-prod:
+    needs: approval
+    uses: ./.github/workflows/dabs_template.yml
+    with:
+      environment: prod
+      deploy: true
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.PROD_ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.PROD_ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}

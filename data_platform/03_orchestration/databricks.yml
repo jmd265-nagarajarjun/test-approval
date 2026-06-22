@@ -1,0 +1,102 @@
+# Reference:
+#   https://docs.databricks.com/dev-tools/bundles/index.html
+
+bundle:
+  name: dabs_bundle
+
+# ----------------------------------------------------------------------
+# Resource Files to Include
+# ----------------------------------------------------------------------
+include:
+  - resources/compute/*/*.yml   # Include all compute definitions
+  - resources/secrets/*.yml    # Include all secret scope definitions
+
+# ----------------------------------------------------------------------
+# Bundle Variables
+# ----------------------------------------------------------------------
+variables:
+
+  keyvault_resource_id:
+    description: >-
+      The Azure Key Vault resource ID for the workspace's Key Vault.
+      This is environment-specific and must be set per target.
+
+  keyvault_dns_name:
+    description: >-
+      The DNS name of the Azure Key Vault for the workspace.
+      This is environment-specific and must be set per target.
+
+  transformation_warehouse_type:
+    description: >-
+      The warehouse type for the transformation SQL warehouse.
+      Use "CLASSIC" for DEV and "PRO" for UAT/PROD.
+
+  transformation_enable_serverless_compute:
+    description: >-
+      Boolean to enable serverless compute for the transformation SQL warehouse.
+      Set to false for DEV and true for UAT/PROD.
+
+# ----------------------------------------------------------------------
+# Presets
+# ----------------------------------------------------------------------
+#presets:
+#  name_prefix: "${bundle.target}_"   # Prefix for all resources based on environment
+
+# ----------------------------------------------------------------------
+# Deployment Targets / Environments
+# ----------------------------------------------------------------------
+
+# For each target, you must provide:
+#   - host: Databricks workspace URL (e.g., https://adb-<workspace-id>.azuredatabricks.net)
+#   - shared_compute_policy_id: Workspace-specific policy ID for the shared compute policy
+
+targets:
+
+  dev-local:
+    mode: development
+    default: true
+    workspace:
+      host: "https://adb-7405608678264076.16.azuredatabricks.net/"
+      auth_type: azure-cli
+    variables:
+      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-databrickskit-dev-uksouth-01/providers/Microsoft.KeyVault/vaults/kv-dbk-dev-cind-01"
+      keyvault_dns_name: "https://kv-dbk-dev-cind-01.vault.azure.net/"
+      transformation_warehouse_type: "CLASSIC"
+      transformation_enable_serverless_compute: false
+
+  dev:
+    mode: production
+    presets:
+      name_prefix: "${bundle.target}_"
+    workspace:
+      host: "https://adb-7405608678264076.16.azuredatabricks.net/"
+      auth_type: azure-cli
+    variables:
+      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-databrickskit-dev-uksouth-01/providers/Microsoft.KeyVault/vaults/kv-dbk-dev-cind-01"
+      keyvault_dns_name: "https://kv-dbk-dev-cind-01.vault.azure.net/"
+      transformation_warehouse_type: "CLASSIC"
+      transformation_enable_serverless_compute: false
+
+  uat:
+    mode: production
+    presets:
+      name_prefix: "${bundle.target}_"
+    workspace:
+      host: "https://adb-7405608678264076.16.azuredatabricks.net/"
+    variables:
+      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-databrickskit-dev-uksouth-01/providers/Microsoft.KeyVault/vaults/kv-dbk-dev-cind-01"
+      keyvault_dns_name: "https://kv-dbk-dev-cind-01.vault.azure.net/"
+      transformation_warehouse_type: "PRO"
+      transformation_enable_serverless_compute: true
+
+  prod:
+    mode: production
+    presets:
+      name_prefix: "${bundle.target}_"
+    workspace:
+      host: ""
+    variables:
+      keyvault_resource_id: ""
+      keyvault_dns_name: ""
+      transformation_warehouse_type: "PRO"
+      transformation_enable_serverless_compute: true

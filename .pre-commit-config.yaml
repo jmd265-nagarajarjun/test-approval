@@ -1,0 +1,47 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        exclude: ^data_platform/03_orchestration/resources/configs/
+      - id: check-added-large-files
+      - id: mixed-line-ending
+        args: ["--fix", "lf"]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: debug-statements
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.13
+    hooks:
+      - id: ruff-check
+        args: ["--fix"]
+        exclude: "src/03_orchestrate/notebooks/.*"
+      - id: ruff-format
+        exclude: "\\.ipynb$"
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+      #- id: commitizen-branch
+      #  stages: [pre-push]
+
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.4.0
+    hooks:
+      - id: sqlfluff-lint
+        additional_dependencies:
+          - dbt-core==1.11.11
+          - dbt-databricks==1.10.4
+          - sqlfluff-templater-dbt
+      - id: sqlfluff-fix
+        additional_dependencies:
+          - dbt-core==1.11.11
+          - dbt-databricks==1.10.4
+          - sqlfluff-templater-dbt
