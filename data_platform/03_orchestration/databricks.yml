@@ -157,21 +157,21 @@ targets:
       transformation_warehouse_type: "CLASSIC"
       transformation_enable_serverless_compute: false
       cluster_permissions:
-        - group_name: dsk_data_engineers_dev
+        - group_name: dsk_data_engineers
           level: CAN_ATTACH_TO
         - user_name: nagarajarjun@jmangroup.com
           level: CAN_MANAGE
         # - service_principal_name: <app-id>
         #   level: CAN_ATTACH_TO
       warehouse_permissions:
-        - group_name: dsk_data_engineers_dev
+        - group_name: dsk_data_engineers
           level: CAN_USE
         - user_name: nagarajarjun@jmangroup.com
           level: CAN_MANAGE
         # - service_principal_name: <app-id>
         #   level: CAN_USE
       secret_scope_permissions:
-        - group_name: dsk_data_engineers_dev
+        - group_name: dsk_data_engineers
           level: READ
         - user_name: nagarajarjun@jmangroup.com
           level: MANAGE
