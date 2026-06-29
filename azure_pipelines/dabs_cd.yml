@@ -48,3 +48,5 @@ stages:
       environment: prod
       environmentResource: prod-approval
       deploy: true
+      armClientId: $(PROD_ARM_CLIENT_ID)
+      armClientSecret: $(PROD_ARM_CLIENT_SECRET)

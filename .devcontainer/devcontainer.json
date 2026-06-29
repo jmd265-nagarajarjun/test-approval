@@ -50,6 +50,7 @@
     "containerEnv": {
         "DBT_PROJECT_DIR": "/workspaces/${localWorkspaceFolderBasename}/data_platform/02_transformation/dbt/databricks_starter_kit",
         "DBT_PROFILES_DIR": "/workspaces/${localWorkspaceFolderBasename}/data_platform/02_transformation/dbt/databricks_starter_kit/.dbt",
+        "DATABRICKS_BUNDLE_ROOT": "/workspaces/${localWorkspaceFolderBasename}/data_platform/03_orchestration/",
         "DBT_SEND_ANONYMOUS_USAGE_STATS": "False",
         "DBT_USER": "${localEnv:USER}",
         "TARGET_ENV": "dev",

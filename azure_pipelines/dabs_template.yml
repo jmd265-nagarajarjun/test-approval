@@ -17,6 +17,11 @@ parameters:
     type: boolean
     default: false
 
+  - name: armClientId
+    type: string
+
+  - name: armClientSecret
+    type: string
 
 jobs:
 - deployment: DABS_${{ parameters.environment }}
@@ -55,8 +60,8 @@ jobs:
           workingDirectory: data_platform/03_orchestration
           displayName: "Validate Databricks Bundle"
           env:
-            ARM_CLIENT_ID: $(ARM_CLIENT_ID)
-            ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+            ARM_CLIENT_ID: ${{ parameters.armClientId }}
+            ARM_CLIENT_SECRET: ${{ parameters.armClientSecret }}
             ARM_TENANT_ID: $(ARM_TENANT_ID)
 
         # ------------------------------------------------------------
@@ -68,8 +73,8 @@ jobs:
           workingDirectory: data_platform/03_orchestration
           displayName: "Plan Databricks Bundle"
           env:
-            ARM_CLIENT_ID: $(ARM_CLIENT_ID)
-            ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+            ARM_CLIENT_ID: ${{ parameters.armClientId }}
+            ARM_CLIENT_SECRET: ${{ parameters.armClientSecret }}
             ARM_TENANT_ID: $(ARM_TENANT_ID)
 
         # ------------------------------------------------------------
@@ -81,8 +86,8 @@ jobs:
           workingDirectory: data_platform/03_orchestration
           displayName: "Summarize Databricks Bundle"
           env:
-            ARM_CLIENT_ID: $(ARM_CLIENT_ID)
-            ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+            ARM_CLIENT_ID: ${{ parameters.armClientId }}
+            ARM_CLIENT_SECRET: ${{ parameters.armClientSecret }}
             ARM_TENANT_ID: $(ARM_TENANT_ID)
 
         # ------------------------------------------------------------
@@ -97,6 +102,6 @@ jobs:
           displayName: "Deploy Databricks Bundle"
           condition: and(succeeded(), eq('${{ parameters.deploy }}', 'true'))
           env:
-            ARM_CLIENT_ID: $(ARM_CLIENT_ID)
-            ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+            ARM_CLIENT_ID: ${{ parameters.armClientId }}
+            ARM_CLIENT_SECRET: ${{ parameters.armClientSecret }}
             ARM_TENANT_ID: $(ARM_TENANT_ID)

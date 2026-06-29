@@ -1,0 +1,68 @@
+# ==============================================================================
+# All-Purpose Cluster Resource Definitions
+# ==============================================================================
+#
+# HOW TO USE:
+#   1. There is one cluster template — use  <<: *cluster  for every instance
+#   2. Add a new block under resources.clusters
+#   3. Fill in only the required fields (marked REQUIRED below)
+#   4. Override optional fields only if the defaults don't suit you
+#
+# TAGS & PERMISSIONS are defined once in databricks.yml and flow in via variables
+# ==============================================================================
+
+
+# ------------------------------------------------------------------------------
+# TEMPLATE: All-Purpose Cluster
+# ------------------------------------------------------------------------------
+_cluster: &cluster
+  spark_version: 16.4.x-scala2.12      # update when LTS version changes
+  runtime_engine: PHOTON
+  node_type_id: Standard_D4s_v5        # D-series default — override for larger workloads
+  driver_node_type_id: Standard_D4s_v5
+  data_security_mode: USER_ISOLATION
+  apply_policy_default_values: true     # applies policy defaults for any unset fields
+  autotermination_minutes: 25
+  custom_tags: ${var.cluster_tags}
+  permissions: ${var.cluster_permissions}
+
+  # --- Per-instance fields (fill these in when adding a new cluster) ---
+  # cluster_name:        REQUIRED — display name in the Databricks UI
+  # autoscale:           REQUIRED
+  #   min_workers:         e.g. 1
+  #   max_workers:         e.g. 4
+  # node_type_id:        Standard_D4s_v5  — override for larger workloads
+  #                      e.g. Standard_D8s_v5 | Standard_D16s_v5
+  # driver_node_type_id: Standard_D4s_v5  — usually matches node_type_id
+  # spark_version:       override only when a specific cluster needs a different runtime
+
+
+# ==============================================================================
+# CLUSTER INSTANCES
+# Add your clusters below. Each one merges the template and overrides specifics.
+# ==============================================================================
+
+resources:
+  clusters:
+
+    # --------------------------------------------------------------------------
+    # Development Cluster — small, for individual dev work
+    # --------------------------------------------------------------------------
+    development:
+      <<: *cluster
+      cluster_name: development
+      autoscale:
+        min_workers: 1
+        max_workers: 4
+
+    # --------------------------------------------------------------------------
+    # Engineering Cluster — larger nodes, more workers
+    # --------------------------------------------------------------------------
+    engineering:
+      <<: *cluster
+      cluster_name: engineering
+      node_type_id: Standard_D8s_v5
+      driver_node_type_id: Standard_D8s_v5
+      autoscale:
+        min_workers: 2
+        max_workers: 8

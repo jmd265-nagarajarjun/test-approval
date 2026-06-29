@@ -1,57 +1,114 @@
-# Reference:
-#   https://docs.databricks.com/dev-tools/bundles/index.html
+# ==============================================================================
+# Databricks Asset Bundle — Root Configuration
+# ==============================================================================
 
 bundle:
   name: dabs_bundle
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Resource Files to Include
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 include:
-  - resources/compute/*/*.yml   # Include all compute definitions
-  - resources/secrets/*.yml    # Include all secret scope definitions
+  - resources/compute/clusters.yml
+  - resources/compute/warehouses.yml
+  - resources/secrets/secret_scopes.yml
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Bundle Variables
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 variables:
-
+  # ----------------------------------------------------------------------------
+  # Azure Key Vault details — find these in Azure Portal under your Key Vault → Overview
+  # ----------------------------------------------------------------------------
+ 
   keyvault_resource_id:
     description: >-
-      The Azure Key Vault resource ID for the workspace's Key Vault.
-      This is environment-specific and must be set per target.
-
+      The Azure Key Vault resource ID. Found in Azure Portal → Key Vault → Overview → Resource ID.
+      e.g. /subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv-name>
+ 
   keyvault_dns_name:
     description: >-
-      The DNS name of the Azure Key Vault for the workspace.
-      This is environment-specific and must be set per target.
+      The Vault URI of the Azure Key Vault. Found in Azure Portal → Key Vault → Overview → Vault URI.
+      Must include https:// and a trailing slash.
+      e.g. https://<kv-name>.vault.azure.net/
 
+  # Used by the transformation warehouse — type differs per environment
   transformation_warehouse_type:
     description: >-
-      The warehouse type for the transformation SQL warehouse.
-      Use "CLASSIC" for DEV and "PRO" for UAT/PROD.
+      Warehouse type for the transformation SQL warehouse.
+      CLASSIC for dev, PRO for uat/prod.
 
   transformation_enable_serverless_compute:
     description: >-
-      Boolean to enable serverless compute for the transformation SQL warehouse.
-      Set to false for DEV and true for UAT/PROD.
+      Whether to enable serverless compute for the transformation warehouse.
+      false for dev, true for uat/prod.
 
-# ----------------------------------------------------------------------
-# Presets
-# ----------------------------------------------------------------------
-#presets:
-#  name_prefix: "${bundle.target}_"   # Prefix for all resources based on environment
+  # ----------------------------------------------------------------------------
+  # Tags
+  # Two separate variables are needed because clusters and warehouses use
+  # different tag structures in the Databricks API:
+  #   - Clusters   → flat map under custom_tags
+  #   - Warehouses → list of key/value pairs under tags.custom_tags
+  #
+  # These two tags are sufficient — Databricks automatically adds Vendor,
+  # ClusterName, and Creator as default tags on every resource.
+  # ----------------------------------------------------------------------------
+  cluster_tags:
+    description: Tags applied to all all-purpose clusters (flat map format).
+    default:
+      Environment: ${bundle.target}
+      Provisioned_By: DABS
 
-# ----------------------------------------------------------------------
+  warehouse_tags:
+    description: Tags applied to all SQL warehouses (key/value list format).
+    default:
+      custom_tags:
+        - key: Environment
+          value: ${bundle.target}
+        - key: Provisioned_By
+          value: DABS
+
+  # ----------------------------------------------------------------------------
+  # Permissions
+  # All three permission variables below follow the same structure.
+  # Group names differ per environment — set the correct values per target below.
+  #
+  # Supported principal types (applies to all permission variables):
+  #   group_name:               — a Databricks group
+  #   user_name:                — an individual user (email)
+  #   service_principal_name:   — a service principal (application ID)
+  # ----------------------------------------------------------------------------
+
+  cluster_permissions:
+    description: Permissions for all-purpose clusters. No default — must be set per target.
+
+  # Levels: CAN_ATTACH_TO — attach notebooks/jobs to the cluster
+  #         CAN_RESTART   — restart the cluster
+  #         CAN_MANAGE    — full control including delete
+
+  warehouse_permissions:
+    description: Permissions for SQL warehouses. No default — must be set per target.
+
+  # Levels: CAN_USE     — run queries on the warehouse
+  #         CAN_MONITOR — view warehouse metrics and query history
+  #         CAN_MANAGE  — full control including config changes and delete    
+
+  secret_scope_permissions:
+    description: Permissions for secret scopes. No default — must be set per target.
+
+  # Levels: READ   — read secrets from the scope
+  #         WRITE  — read and write secrets to the scope
+  #         MANAGE — full control including delete and manage permissions
+
+# ------------------------------------------------------------------------------
 # Deployment Targets / Environments
-# ----------------------------------------------------------------------
-
-# For each target, you must provide:
-#   - host: Databricks workspace URL (e.g., https://adb-<workspace-id>.azuredatabricks.net)
-#   - shared_compute_policy_id: Workspace-specific policy ID for the shared compute policy
+# ------------------------------------------------------------------------------
 
 targets:
 
+  # ----------------------------------------------------------------------------
+  # Local Dev — azure-cli auth, development mode, no name prefix
+  # ----------------------------------------------------------------------------
   dev-local:
     mode: development
     default: true
@@ -59,11 +116,35 @@ targets:
       host: "https://adb-2013382429548984.4.azuredatabricks.net/"
       auth_type: azure-cli
     variables:
-      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-databrickskit-dev-uksouth-01/providers/Microsoft.KeyVault/vaults/kv-dbk-dev-cind-01"
-      keyvault_dns_name: "https://kv-dbk-dev-cind-01.vault.azure.net/"
+      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-lakester-dev-westeur-01/providers/Microsoft.KeyVault/vaults/kv-lake-dev-westeur-01"
+      keyvault_dns_name: "https://kv-lake-dev-westeur-01.vault.azure.net/"
       transformation_warehouse_type: "CLASSIC"
       transformation_enable_serverless_compute: false
+      cluster_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_ATTACH_TO
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE
+        # - service_principal_name: <app-id>
+        #   level: CAN_ATTACH_TO
+      warehouse_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_USE
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE
+        # - service_principal_name: <app-id>
+        #   level: CAN_USE
+      secret_scope_permissions:
+        - group_name: dsk_data_engineers
+          level: READ
+        - user_name: nagarajarjun@jmangroup.com
+          level: MANAGE
+        # - service_principal_name: <app-id>
+        #   level: READ
 
+  # ----------------------------------------------------------------------------
+  # Dev — production mode, resources prefixed with "dev_"
+  # ----------------------------------------------------------------------------
   dev:
     mode: production
     presets:
@@ -71,11 +152,35 @@ targets:
     workspace:
       host: "https://adb-2013382429548984.4.azuredatabricks.net/"
     variables:
-      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-databrickskit-dev-uksouth-01/providers/Microsoft.KeyVault/vaults/kv-dbk-dev-cind-01"
-      keyvault_dns_name: "https://kv-dbk-dev-cind-01.vault.azure.net/"
+      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-lakester-dev-westeur-01/providers/Microsoft.KeyVault/vaults/kv-lake-dev-westeur-01"
+      keyvault_dns_name: "https://kv-lake-dev-westeur-01.vault.azure.net/"
       transformation_warehouse_type: "CLASSIC"
       transformation_enable_serverless_compute: false
+      cluster_permissions:
+        - group_name: dsk_data_engineers_dev
+          level: CAN_ATTACH_TO
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE
+        # - service_principal_name: <app-id>
+        #   level: CAN_ATTACH_TO
+      warehouse_permissions:
+        - group_name: dsk_data_engineers_dev
+          level: CAN_USE
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE
+        # - service_principal_name: <app-id>
+        #   level: CAN_USE
+      secret_scope_permissions:
+        - group_name: dsk_data_engineers_dev
+          level: READ
+        - user_name: nagarajarjun@jmangroup.com
+          level: MANAGE
+        # - service_principal_name: <app-id>
+        #   level: READ
 
+  # ----------------------------------------------------------------------------
+  # UAT — PRO + serverless for transformation warehouse
+  # ----------------------------------------------------------------------------
   uat:
     mode: production
     presets:
@@ -83,19 +188,64 @@ targets:
     workspace:
       host: "https://adb-2013382429548984.4.azuredatabricks.net/"
     variables:
-      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-databrickskit-dev-uksouth-01/providers/Microsoft.KeyVault/vaults/kv-dbk-dev-cind-01"
-      keyvault_dns_name: "https://kv-dbk-dev-cind-01.vault.azure.net/"
+      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-lakester-dev-westeur-01/providers/Microsoft.KeyVault/vaults/kv-lake-dev-westeur-01"
+      keyvault_dns_name: "https://kv-lake-dev-westeur-01.vault.azure.net/"
       transformation_warehouse_type: "PRO"
       transformation_enable_serverless_compute: true
+      cluster_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_ATTACH_TO
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE
+        # - service_principal_name: <app-id>
+        #   level: CAN_ATTACH_TO
+      warehouse_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_USE
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE
+        # - service_principal_name: <app-id>
+        #   level: CAN_USE
+      secret_scope_permissions:
+        - group_name: dsk_data_engineers
+          level: READ
+        - user_name: nagarajarjun@jmangroup.com
+          level: MANAGE
+        # - service_principal_name: <app-id>
+        #   level: READ
 
+  # ----------------------------------------------------------------------------
+  # Production
+  # ----------------------------------------------------------------------------
   prod:
     mode: production
     presets:
       name_prefix: "${bundle.target}_"
     workspace:
-      host: ""
+      host: "https://adb-2013382429548984.4.azuredatabricks.net/"   # set your prod workspace URL here
     variables:
-      keyvault_resource_id: ""
-      keyvault_dns_name: ""
+      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-lakester-dev-westeur-01/providers/Microsoft.KeyVault/vaults/kv-lake-dev-westeur-01"
+      keyvault_dns_name: "https://kv-lake-dev-westeur-01.vault.azure.net/"
       transformation_warehouse_type: "PRO"
       transformation_enable_serverless_compute: true
+      cluster_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_ATTACH_TO
+        # - service_principal_name: <prod-sp-app-id>
+        #   level: CAN_ATTACH_TO
+        # - user_name: <email>
+        #   level: CAN_MANAGE
+      warehouse_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_USE
+        # - service_principal_name: <prod-sp-app-id>
+        #   level: CAN_USE
+        # - user_name: <email>
+        #   level: CAN_MANAGE
+      secret_scope_permissions:
+        - group_name: dsk_data_engineers
+          level: READ
+        # - service_principal_name: <prod-sp-app-id>
+        #  level: READ
+        # - user_name: <email>
+        #   level: MANAGE

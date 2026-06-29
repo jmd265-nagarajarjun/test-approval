@@ -13,7 +13,6 @@ on:
       - main
     paths:
       - 'data_platform/03_orchestration/**'
-  workflow_dispatch:
 
 jobs:
   # ----------------------------

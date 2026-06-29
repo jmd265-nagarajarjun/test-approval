@@ -50,6 +50,8 @@ stages:
     parameters:
       environment: dev
       deploy: true
+      armClientId: $(PROD_ARM_CLIENT_ID)
+      armClientSecret: $(PROD_ARM_CLIENT_SECRET)
 
 
 
@@ -72,3 +74,5 @@ stages:
       environment: uat
       environmentResource: uat-approval
       deploy: true
+      armClientId: $(PROD_ARM_CLIENT_ID)
+      armClientSecret: $(PROD_ARM_CLIENT_SECRET)
