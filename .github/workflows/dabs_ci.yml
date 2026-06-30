@@ -12,7 +12,7 @@ on:
     branches:
       - main
     paths:
-      - 'data_platform/03_orchestration/**'
+      - 'src/03_orchestrate/**'
 
 jobs:
   # ----------------------------

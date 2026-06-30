@@ -4,7 +4,7 @@
 #
 # HOW TO USE:
 #   1. Choose the right template for your warehouse:
-#        - Serverless  →  use  <<: *wh_serverless   
+#        - Serverless  →  use  <<: *wh_serverless
 #        - Standard    →  use  <<: *wh_standard     (CLASSIC or PRO Warehouse)
 #
 #   2. Add a new block under resources.sql_warehouses
@@ -63,31 +63,40 @@ resources:
   sql_warehouses:
 
     # --------------------------------------------------------------------------
-    # Analytics Warehouse — Serverless, scales up to 2 clusters
+    # Ingestion Warehouse — Serverless, scales up to 3 clusters
+    # --------------------------------------------------------------------------
+    ingestion:
+      <<: *wh_serverless
+      name: ingestion_wh
+      cluster_size: Small
+      max_num_clusters: 3
+
+    # --------------------------------------------------------------------------
+    # Analytics Warehouse — Serverless, scales up to 4 clusters
     # --------------------------------------------------------------------------
     analytics:
       <<: *wh_serverless
       name: analytics_wh
-      cluster_size: Small
-      max_num_clusters: 2
+      cluster_size: X-Small
+      max_num_clusters: 4
 
     # --------------------------------------------------------------------------
-    # Reporting Warehouse — Serverless, single cluster, smallest size
+    # BI Warehouse — Serverless, scales up to 3 clusters
     # --------------------------------------------------------------------------
-    reporting:
+    bi:
       <<: *wh_serverless
-      name: reporting_wh
-      cluster_size: X-Small
-      max_num_clusters: 1
+      name: bi_wh
+      cluster_size: Small
+      max_num_clusters: 3
 
     # --------------------------------------------------------------------------
     # Transformation Warehouse — type is env-driven via variables in databricks.yml
-    # CLASSIC in dev/dev-local, PRO + serverless in uat/prod
+    # CLASSIC in dev, PRO + serverless in uat/prod
     # --------------------------------------------------------------------------
-    transformation:
+    transform:
       <<: *wh_standard
-      name: transformation_wh
+      name: transform_wh
       cluster_size: Small
-      max_num_clusters: 2
+      max_num_clusters: 3
       warehouse_type: ${var.transformation_warehouse_type}
       enable_serverless_compute: ${var.transformation_enable_serverless_compute}

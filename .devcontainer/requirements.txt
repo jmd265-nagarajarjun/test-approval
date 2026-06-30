@@ -3,4 +3,3 @@ dbt-databricks==1.10.4
 pre-commit
 sqlfluff
 sqlfluff-templater-dbt
-commitizen

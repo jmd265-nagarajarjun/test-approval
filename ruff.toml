@@ -1,4 +1,0 @@
-# Treat Databricks-specific variables as predefined globals
-# to prevent Ruff from flagging them as undefined
-
-builtins = ["spark", "dbutils"]

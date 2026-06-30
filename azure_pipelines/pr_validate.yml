@@ -23,7 +23,7 @@ pr:
       - main
   paths:
     include:
-      - data_platform/03_orchestration/*
+      - src/03_orchestrate/*
 
 
 stages:

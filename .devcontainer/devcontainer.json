@@ -24,9 +24,6 @@
                 "eamodio.gitlens",
                 "wholroyd.jinja",
                 "vivaxy.vscode-conventional-commits",
-                "ms-python.python",
-                "bastienboutonnet.vscode-dbt",
-                "ms-azuretools.vscode-docker",
                 "databricks.databricks"
             ],
             "settings": {
@@ -36,21 +33,19 @@
                 },
                 "terminal.integrated.defaultProfile.linux": "bash",
                 "python.defaultInterpreterPath": "/usr/local/bin/python",
-                "python.linting.enabled": true,
-                "python.linting.pylintEnabled": true,
                 "editor.formatOnSave": true,
                 "dbt.enableNewLineagePanel": true,
                 "dbt.powerUser.sqlDialect": "ansi",
                 "dbt.powerUser.enableSyntaxCheck": true,
                 "dbt.powerUser.enableHover": true,
-                "dbt.powerUser.projectDir": "/workspaces/${localWorkspaceFolderBasename}/data_platform/02_transform/dbt/databricks_starter_kit/models"
+                "dbt.powerUser.projectDir": "/workspaces/${localWorkspaceFolderBasename}/src/02_transform/dbt_core"
             }
         }
     },
     "containerEnv": {
-        "DBT_PROJECT_DIR": "/workspaces/${localWorkspaceFolderBasename}/data_platform/02_transformation/dbt/databricks_starter_kit",
-        "DBT_PROFILES_DIR": "/workspaces/${localWorkspaceFolderBasename}/data_platform/02_transformation/dbt/databricks_starter_kit/.dbt",
-        "DATABRICKS_BUNDLE_ROOT": "/workspaces/${localWorkspaceFolderBasename}/data_platform/03_orchestration/",
+        "DBT_PROJECT_DIR": "/workspaces/${localWorkspaceFolderBasename}/src/02_transform/dbt_core",
+        "DBT_PROFILES_DIR": "/workspaces/${localWorkspaceFolderBasename}/src/02_transform/dbt_core/.dbt",
+        "DATABRICKS_BUNDLE_ROOT": "/workspaces/${localWorkspaceFolderBasename}/src/",
         "DBT_SEND_ANONYMOUS_USAGE_STATS": "False",
         "DBT_USER": "${localEnv:USER}",
         "TARGET_ENV": "dev",

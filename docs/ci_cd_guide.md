@@ -174,8 +174,9 @@ Reference: [Microsoft Entra ID service principal authentication - Microsoft Lear
 
 The following secrets must be configured before the pipelines will work.
 
-- **GitHub** → Settings → Secrets and Variables → Actions
-- **Azure DevOps** → Key vault backed variable groups
+### GitHub Actions
+
+**GitHub** → Settings → Secrets and Variables → Actions
 
 Seven secrets are required in total - two per environment for the service principal credentials, and one shared tenant ID:
 
@@ -190,6 +191,30 @@ Where `<ENV>` is one of:
 - `DEV`
 - `UAT`
 - `PROD`
+
+### Azure DevOps
+
+**Azure DevOps** → Pipelines → Library → Variable groups
+
+Unlike GitHub Actions, Azure DevOps uses per-environment **variable groups** rather than a flat secret list. Four variable groups are required in total:
+
+| Variable Group | Used By | Contains |
+|---|---|---|
+| `DEV-Databricks-Secrets` | PR validation, CI pipeline (Dev stage) | `DEV_ARM_CLIENT_ID`, `DEV_ARM_CLIENT_SECRET` |
+| `UAT-Databricks-Secrets` | CI pipeline (UAT stage) | `UAT_ARM_CLIENT_ID`, `UAT_ARM_CLIENT_SECRET` |
+| `PROD-Databricks-Secrets` | CD pipeline (Production stage) | `PROD_ARM_CLIENT_ID`, `PROD_ARM_CLIENT_SECRET` |
+| `ARM-Tenant` | All pipelines (shared) | `ARM_TENANT_ID` |
+
+
+Each pipeline references its environment-specific group plus the shared `ARM-Tenant` group in its `variables` section, e.g.:
+
+```yaml
+variables:
+- group: DEV-Databricks-Secrets
+- group: ARM-Tenant
+```
+
+The `ARM_CLIENT_ID` and `ARM_CLIENT_SECRET` values are then passed into the reusable template as explicit parameters (`armClientId`, `armClientSecret`), while `ARM_TENANT_ID` is referenced directly inside the template as `$(ARM_TENANT_ID)`, since it's available to any pipeline that includes the `ARM-Tenant` group.
 
 > The `ARM_CLIENT_SECRET` is generated from the **Azure Portal** under the App Registration for your service principal (Certificates & Secrets → New client secret). The `ARM_CLIENT_ID` is the Application (client) ID shown on the App Registration overview page.
 

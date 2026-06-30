@@ -30,7 +30,7 @@ trigger:
       - main
   paths:
     include:
-      - data_platform/03_orchestration/*
+      - src/03_orchestrate/*
 
 
 stages:
@@ -50,8 +50,8 @@ stages:
     parameters:
       environment: dev
       deploy: true
-      armClientId: $(PROD_ARM_CLIENT_ID)
-      armClientSecret: $(PROD_ARM_CLIENT_SECRET)
+      armClientId: $(DEV_ARM_CLIENT_ID)
+      armClientSecret: $(DEV_ARM_CLIENT_SECRET)
 
 
 
@@ -74,5 +74,5 @@ stages:
       environment: uat
       environmentResource: uat-approval
       deploy: true
-      armClientId: $(PROD_ARM_CLIENT_ID)
-      armClientSecret: $(PROD_ARM_CLIENT_SECRET)
+      armClientId: $(UAT_ARM_CLIENT_ID)
+      armClientSecret: $(UAT_ARM_CLIENT_SECRET)

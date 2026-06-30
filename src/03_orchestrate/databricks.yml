@@ -20,12 +20,12 @@ variables:
   # ----------------------------------------------------------------------------
   # Azure Key Vault details — find these in Azure Portal under your Key Vault → Overview
   # ----------------------------------------------------------------------------
- 
+
   keyvault_resource_id:
     description: >-
       The Azure Key Vault resource ID. Found in Azure Portal → Key Vault → Overview → Resource ID.
       e.g. /subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv-name>
- 
+
   keyvault_dns_name:
     description: >-
       The Vault URI of the Azure Key Vault. Found in Azure Portal → Key Vault → Overview → Vault URI.
@@ -91,7 +91,7 @@ variables:
 
   # Levels: CAN_USE     — run queries on the warehouse
   #         CAN_MONITOR — view warehouse metrics and query history
-  #         CAN_MANAGE  — full control including config changes and delete    
+  #         CAN_MANAGE  — full control including config changes and delete
 
   secret_scope_permissions:
     description: Permissions for secret scopes. No default — must be set per target.

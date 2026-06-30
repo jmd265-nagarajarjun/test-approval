@@ -5,7 +5,7 @@ name: PR - Validate
 #   - Triggered on Pull Requests targeting the `main` branch
 #   - Validates Databricks Asset Bundle configuration for the DEV environment
 #   - Checks bundle syntax, variable resolution, and resource definitions
-#   - Ensures any changes in `data_platform/03_orchestration/` are validated before merge
+#   - Ensures any changes in `src/03_orchestrate/` are validated before merge
 # ----------------------------------------------------------------------
 
 on:
@@ -13,7 +13,7 @@ on:
     branches:
       - main
     paths:
-      - 'data_platform/03_orchestration/**'
+      - 'src/03_orchestrate/**'
 
 jobs:
   validate-dev:

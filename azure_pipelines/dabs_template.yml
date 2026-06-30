@@ -57,7 +57,7 @@ jobs:
         - script: |
             echo "Validating bundle for environment: ${{ parameters.environment }}"
             databricks bundle validate --target ${{ parameters.environment }}
-          workingDirectory: data_platform/03_orchestration
+          workingDirectory: src/03_orchestrate
           displayName: "Validate Databricks Bundle"
           env:
             ARM_CLIENT_ID: ${{ parameters.armClientId }}
@@ -70,7 +70,7 @@ jobs:
         - script: |
             echo "Planning bundle for environment: ${{ parameters.environment }}"
             databricks bundle plan --target ${{ parameters.environment }}
-          workingDirectory: data_platform/03_orchestration
+          workingDirectory: src/03_orchestrate
           displayName: "Plan Databricks Bundle"
           env:
             ARM_CLIENT_ID: ${{ parameters.armClientId }}
@@ -83,7 +83,7 @@ jobs:
         - script: |
             echo "Summarizing bundle for environment: ${{ parameters.environment }}"
             databricks bundle summary --target ${{ parameters.environment }}
-          workingDirectory: data_platform/03_orchestration
+          workingDirectory: src/03_orchestrate
           displayName: "Summarize Databricks Bundle"
           env:
             ARM_CLIENT_ID: ${{ parameters.armClientId }}
@@ -98,7 +98,7 @@ jobs:
             databricks bundle deploy \
               --target ${{ parameters.environment }} \
               --force-lock
-          workingDirectory: data_platform/03_orchestration
+          workingDirectory: src/03_orchestrate
           displayName: "Deploy Databricks Bundle"
           condition: and(succeeded(), eq('${{ parameters.deploy }}', 'true'))
           env:

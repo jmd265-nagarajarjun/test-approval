@@ -1,10 +1,10 @@
-databricks_starter_kit:
+dbt_core:
   target: dev
   outputs:
     dev:
       type: databricks
-      host: #enter your host
-      http_path: /sql/1.0/warehouses/ae1b59d20c4c7857
+      host: https://adb-2013382429548984.4.azuredatabricks.net/
+      http_path: /sql/1.0/warehouses/ef6706a54e22acb7
       auth_type: 'oauth'
       catalog: analytics_dev_core
       schema: dev
