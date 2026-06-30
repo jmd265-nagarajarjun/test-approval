@@ -248,4 +248,4 @@ targets:
         # - service_principal_name: <prod-sp-app-id>
         #  level: READ
         # - user_name: <email>
-        #   level: MANAGE
+        #   level: MANAGEE
