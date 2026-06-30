@@ -1,6 +1,6 @@
 <!-- # Lakester - Databricks Data Platform Starter Kit
 
-Lakester accelerates the setup of Azure Databricks projects by providing a standardized project structure, development environment, resource provisioning framework, code quality tooling, and CI/CD templates.
+Lakester accelrates the setup of Azure Databricks projects by providing a standardized project structure, development environment, resource provisioning framework, code quality tooling, and CI/CD templates.
 
 ---
 
