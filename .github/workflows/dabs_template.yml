@@ -61,7 +61,7 @@ jobs:
         run: |
           echo "Validating bundle for environment: ${{ inputs.environment }}"
           databricks bundle validate --target ${{ inputs.environment }}
-        working-directory: src/03_orchestrate/
+        working-directory: src/
 
       # --------------------------------------------------------------
       # Plan Databricks Asset Bundle
@@ -70,7 +70,7 @@ jobs:
         run: |
           echo "Planning bundle for environment: ${{ inputs.environment }}"
           databricks bundle plan --target ${{ inputs.environment }}
-        working-directory: src/03_orchestrate/
+        working-directory: src/
 
       # --------------------------------------------------------------
       # Summary Databricks Asset Bundle
@@ -79,7 +79,7 @@ jobs:
         run: |
           echo "Summarizing bundle for environment: ${{ inputs.environment }}"
           databricks bundle summary --target ${{ inputs.environment }}
-        working-directory: src/03_orchestrate/
+        working-directory: src/
 
       # --------------------------------------------------------------
       # Deploy Databricks Asset Bundle (Optional)
@@ -91,4 +91,4 @@ jobs:
           databricks bundle deploy \
             --target ${{ inputs.environment }} \
             --force-lock
-        working-directory: src/03_orchestrate/
+        working-directory: src/

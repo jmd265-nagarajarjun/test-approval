@@ -1,0 +1,202 @@
+# ==============================================================================
+# Databricks Asset Bundle — Root Configuration
+# ==============================================================================
+
+bundle:
+  name: dabs_bundle
+
+# ------------------------------------------------------------------------------
+# Resource Files to Include
+# ------------------------------------------------------------------------------
+include:
+  - 00_infra/resources/compute/clusters.yml
+  - 00_infra/resources/compute/warehouses.yml
+  - 00_infra/resources/secrets/secret_scopes.yml
+
+# ------------------------------------------------------------------------------
+# Bundle Variables
+# ------------------------------------------------------------------------------
+variables:
+  # ----------------------------------------------------------------------------
+  # Azure Key Vault details — find these in Azure Portal under your Key Vault → Overview
+  # ----------------------------------------------------------------------------
+
+  keyvault_resource_id:
+    description: >-
+      The Azure Key Vault resource ID. Found in Azure Portal → Key Vault → Overview → Resource ID.
+      e.g. /subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv-name>
+
+  keyvault_dns_name:
+    description: >-
+      The Vault URI of the Azure Key Vault. Found in Azure Portal → Key Vault → Overview → Vault URI.
+      Must include https:// and a trailing slash.
+      e.g. https://<kv-name>.vault.azure.net/
+
+  # ----------------------------------------------------------------------------
+  # Tags
+  # Two separate variables are needed because clusters and warehouses use
+  # different tag structures in the Databricks API:
+  #   - Clusters   → flat map under custom_tags
+  #   - Warehouses → list of key/value pairs under tags.custom_tags
+  #
+  # These two tags are sufficient — Databricks automatically adds Vendor,
+  # ClusterName, and Creator as default tags on every resource.
+  # ----------------------------------------------------------------------------
+  cluster_tags:
+    description: Tags applied to all all-purpose clusters (flat map format).
+    default:
+      Environment: ${bundle.target}
+      Provisioned_By: DABS
+
+  warehouse_tags:
+    description: Tags applied to all SQL warehouses (key/value list format).
+    default:
+      custom_tags:
+        - key: Environment
+          value: ${bundle.target}
+        - key: Provisioned_By
+          value: DABS
+
+  # ----------------------------------------------------------------------------
+  # Permissions
+  # All three permission variables below follow the same structure.
+  # Group names differ per environment — set the correct values per target below.
+  #
+  # Supported principal types (applies to all permission variables):
+  #   group_name:               — a Databricks group
+  #   user_name:                — an individual user (email)
+  #   service_principal_name:   — a service principal (application ID)
+  # ----------------------------------------------------------------------------
+
+  cluster_permissions:
+    description: Permissions for all-purpose clusters. No default — must be set per target.
+
+  # Levels: CAN_ATTACH_TO — attach notebooks/jobs to the cluster
+  #         CAN_RESTART   — restart the cluster
+  #         CAN_MANAGE    — full control including delete
+
+  warehouse_permissions:
+    description: Permissions for SQL warehouses. No default — must be set per target.
+
+  # Levels: CAN_USE     — run queries on the warehouse
+  #         CAN_MONITOR — view warehouse metrics and query history
+  #         CAN_MANAGE  — full control including config changes and delete
+
+  secret_scope_permissions:
+    description: Permissions for secret scopes. No default — must be set per target.
+
+  # Levels: READ   — read secrets from the scope
+  #         WRITE  — read and write secrets to the scope
+  #         MANAGE — full control including delete and manage permissions
+
+# ------------------------------------------------------------------------------
+# Deployment Targets / Environments
+# ------------------------------------------------------------------------------
+
+targets:
+
+  # ----------------------------------------------------------------------------
+  # Local Dev — azure-cli auth, development mode, no name prefix
+  # ----------------------------------------------------------------------------
+  dev-local:
+    mode: development
+    default: true
+    workspace:
+      host: "https://adb-2013382429548984.4.azuredatabricks.net/"
+      auth_type: azure-cli
+    variables:
+      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-lakester-dev-westeur-01/providers/Microsoft.KeyVault/vaults/kv-lake-dev-westeur-01"
+      keyvault_dns_name: "https://kv-lake-dev-westeur-01.vault.azure.net/"
+      cluster_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_ATTACH_TO
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE
+      warehouse_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_USE
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE
+      secret_scope_permissions:
+        - group_name: dsk_data_engineers
+          level: READ
+        - user_name: nagarajarjun@jmangroup.com
+          level: MANAGE
+
+  # ----------------------------------------------------------------------------
+  # Dev — production mode, resources prefixed with "dev_"
+  # ----------------------------------------------------------------------------
+  dev:
+    mode: production
+    presets:
+      name_prefix: "${bundle.target}_"
+    workspace:
+      host: "https://adb-2013382429548984.4.azuredatabricks.net/"
+    variables:
+      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-lakester-dev-westeur-01/providers/Microsoft.KeyVault/vaults/kv-lake-dev-westeur-01"
+      keyvault_dns_name: "https://kv-lake-dev-westeur-01.vault.azure.net/"
+      cluster_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_ATTACH_TO
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE
+      warehouse_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_USE
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE
+      secret_scope_permissions:
+        - group_name: dsk_data_engineers
+          level: READ
+        - user_name: nagarajarjun@jmangroup.com
+          level: MANAGE
+
+  # ----------------------------------------------------------------------------
+  # UAT — PRO + serverless for transformation warehouse
+  # ----------------------------------------------------------------------------
+  uat:
+    mode: production
+    presets:
+      name_prefix: "${bundle.target}_"
+    workspace:
+      host: "https://adb-2013382429548984.4.azuredatabricks.net/"
+    variables:
+      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-lakester-dev-westeur-01/providers/Microsoft.KeyVault/vaults/kv-lake-dev-westeur-01"
+      keyvault_dns_name: "https://kv-lake-dev-westeur-01.vault.azure.net/"
+      cluster_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_ATTACH_TO
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE
+      warehouse_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_USE
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE
+      secret_scope_permissions:
+        - group_name: dsk_data_engineers
+          level: READ
+        - user_name: nagarajarjun@jmangroup.com
+          level: MANAGE
+
+  # ----------------------------------------------------------------------------
+  # Production
+  # ----------------------------------------------------------------------------
+  prod:
+    mode: production
+    presets:
+      name_prefix: "${bundle.target}_"
+    workspace:
+      host: "https://adb-2013382429548984.4.azuredatabricks.net/"   # set your prod workspace URL here
+    variables:
+      keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-lakester-dev-westeur-01/providers/Microsoft.KeyVault/vaults/kv-lake-dev-westeur-01"
+      keyvault_dns_name: "https://kv-lake-dev-westeur-01.vault.azure.net/"
+      cluster_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_ATTACH_TO
+      warehouse_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_USE
+      secret_scope_permissions:
+        - group_name: dsk_data_engineers
+          level: READ

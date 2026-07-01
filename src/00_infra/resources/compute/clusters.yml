@@ -1,0 +1,58 @@
+# ==============================================================================
+# All-Purpose Cluster Resource Definitions
+# ==============================================================================
+#
+# HOW TO USE:
+#   1. One cluster template exists — all clusters inherit via  <<: *cluster
+#   2. Add a new block under resources.clusters with a resource key (e.g., my_cluster)
+#   3. Set cluster_name (the only REQUIRED field)
+#   4. Override optional fields ONLY if you need different values than the template
+#   5. Tags & Permissions flow in automatically from databricks.yml
+# ==============================================================================
+
+
+# ------------------------------------------------------------------------------
+# TEMPLATE: All-Purpose Cluster
+# ------------------------------------------------------------------------------
+_cluster: &cluster
+  spark_version: 16.4.x-scala2.12      # update when LTS version changes
+  runtime_engine: PHOTON
+  node_type_id: Standard_D4s_v5        # D-series default — override for larger workloads
+  driver_node_type_id: Standard_D4s_v5
+  data_security_mode: USER_ISOLATION
+  apply_policy_default_values: true     # applies policy defaults for any unset fields
+  autotermination_minutes: 25
+  autoscale:
+    min_workers: 1
+    max_workers: 3
+  custom_tags: ${var.cluster_tags}
+  permissions: ${var.cluster_permissions}
+
+  # --- REQUIRED field (must provide for every cluster) ---
+  # cluster_name:        Display name shown in the Databricks UI
+  #
+  # To override any field from the template defaults, add it under your cluster block.
+  # Example: to use larger nodes and more workers —
+  # development:
+  #   <<: *cluster
+  #   cluster_name: development
+  #   node_type_id: Standard_D8s_v5
+  #   autoscale:
+  #     min_workers: 2
+  #     max_workers: 8
+
+
+# ==============================================================================
+# CLUSTER INSTANCES
+# Add your clusters below. Each one merges the template and overrides specifics if needed.
+# ==============================================================================
+
+resources:
+  clusters:
+
+    # --------------------------------------------------------------------------
+    # Development Cluster — small, for individual dev work
+    # --------------------------------------------------------------------------
+    development:
+      <<: *cluster
+      cluster_name: development

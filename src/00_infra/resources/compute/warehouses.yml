@@ -1,0 +1,107 @@
+# ==============================================================================
+# SQL Warehouse Resource Definitions
+# ==============================================================================
+#
+# HOW TO USE:
+#   1. Choose the right template for your warehouse:
+#        - Serverless  →  use  <<: *wh_serverless
+#        - Standard    →  use  <<: *wh_standard     (CLASSIC or PRO Warehouse)
+#
+#   2. Add a new block under resources.sql_warehouses
+#   3. Set name (the only REQUIRED field)
+#   4. Tags & Permissions are defined once in databricks.yml and flow in via variables
+# ==============================================================================
+
+
+# ------------------------------------------------------------------------------
+# TEMPLATE: Serverless Warehouse
+# Auto-stop is 5 mins — serverless spins up in seconds, no need to keep warm
+# ------------------------------------------------------------------------------
+_wh_serverless: &wh_serverless
+  warehouse_type: PRO
+  enable_serverless_compute: true
+  enable_photon: true
+  auto_stop_mins: 5
+  min_num_clusters: 1
+  max_num_clusters: 3
+  cluster_size: Small
+  spot_instance_policy: COST_OPTIMIZED
+  tags: ${var.warehouse_tags}
+  permissions: ${var.warehouse_permissions}
+
+  # --- REQUIRED field (must provide for every warehouse) ---
+  # name:           Display name shown in the Databricks UI
+  #
+  # To override any field from the template defaults, add it under your warehouse block.
+  # Example: to use a smaller size and more clusters —
+  #   analytics:
+  #     <<: *wh_serverless
+  #     name: analytics_wh
+  #     cluster_size: X-Small
+  #     max_num_clusters: 4
+
+
+# ------------------------------------------------------------------------------
+# TEMPLATE: Standard Warehouse  (CLASSIC or PRO non-serverless)
+# Auto-stop is 25 mins — takes ~4 mins to start, worth keeping warm longer
+# ------------------------------------------------------------------------------
+_wh_standard: &wh_standard
+  warehouse_type: CLASSIC
+  enable_serverless_compute: false
+  enable_photon: true
+  auto_stop_mins: 25
+  min_num_clusters: 1
+  max_num_clusters: 3
+  cluster_size: Small
+  spot_instance_policy: COST_OPTIMIZED
+  tags: ${var.warehouse_tags}
+  permissions: ${var.warehouse_permissions}
+
+  # --- REQUIRED field (must provide for every warehouse) ---
+  # name:           Display name shown in the Databricks UI
+  #
+  # To override any field from the template defaults, add it under your warehouse block.
+  # Example: to use PRO type with scale-out —
+  #   transform:
+  #     <<: *wh_standard
+  #     name: transform_wh
+  #     warehouse_type: PRO
+  #     max_num_clusters: 6
+
+
+# ==============================================================================
+# WAREHOUSE INSTANCES
+# Add your warehouses below. Each one merges a template and overrides specifics if needed.
+# ==============================================================================
+
+resources:
+  sql_warehouses:
+
+    # --------------------------------------------------------------------------
+    # Ingestion Warehouse
+    # --------------------------------------------------------------------------
+    ingestion:
+      <<: *wh_serverless
+      name: ingestion_wh
+
+    # --------------------------------------------------------------------------
+    # Transformation Warehouse
+    # --------------------------------------------------------------------------
+    transform:
+      <<: *wh_serverless
+      name: transform_wh
+
+    # --------------------------------------------------------------------------
+    # Analytics Warehouse
+    # --------------------------------------------------------------------------
+    analytics:
+      <<: *wh_serverless
+      name: analytics_wh
+      cluster_size: X-Small
+
+    # --------------------------------------------------------------------------
+    # BI Warehouse
+    # --------------------------------------------------------------------------
+    bi:
+      <<: *wh_serverless
+      name: bi_wh

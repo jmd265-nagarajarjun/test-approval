@@ -13,6 +13,7 @@ on:
     branches:
       - main
     paths:
+      - 'src/00_infra/**'
       - 'src/03_orchestrate/**'
 
 jobs:
