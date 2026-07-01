@@ -6,16 +6,29 @@ on:
       - 'v*'
 
 jobs:
+  # Validate PROD bundle first so any issues are caught before approval
+  validate-prod:
+    uses: ./.github/workflows/dabs_template.yml
+    with:
+      environment: prod
+      deploy: false
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.PROD_ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.PROD_ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
   # Approval gate - pauses here until reviewer approves
   approval:
+    needs: validate-prod
     runs-on: ubuntu-latest
     environment: prod-approval
     steps:
       - run: echo "Approved for PROD deployment"
 
-  # Deploy to PROD - only runs after approval
+  # Deploy to PROD - only runs after validation and approval
   deploy-prod:
-    needs: approval
+    needs:
+      - approval
     uses: ./.github/workflows/dabs_template.yml
     with:
       environment: prod

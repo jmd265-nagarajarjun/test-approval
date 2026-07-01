@@ -45,7 +45,7 @@ az login
 
 ### 2. Configure your environments
 
-Open `data_platform/03_orchestration/databricks.yml` and fill in the values for each target (`dev`, `uat`, `prod`):
+Open `src/databricks.yml` and fill in the values for each target (`dev`, `uat`, `prod`):
 
 | Setting | What it is |
 |---|---|
@@ -57,7 +57,7 @@ Open `data_platform/03_orchestration/databricks.yml` and fill in the values for 
 ### 3. Deploy
 
 ```bash
-cd data_platform/03_orchestration
+cd src
 
 # Validate your configuration first
 databricks bundle validate
@@ -67,12 +67,6 @@ databricks bundle deploy
 ```
 
 This deploys SQL Warehouses, All-Purpose Clusters, and a Secret Scope to the workspace. All resources are prefixed with your username in development mode, so nothing conflicts with a teammate's setup.
-
-**To deploy only the SQL Warehouses** (if you don't need clusters right now):
-
-```bash
-databricks bundle deploy --resource-type sql_warehouses
-```
 
 Once you've tested your configuration, raise a PR and the CI/CD pipeline handles deployment to `dev`, `uat`, and `prod`.
 
