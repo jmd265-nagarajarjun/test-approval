@@ -9,10 +9,10 @@ bundle:
 # Resource Files to Include
 # ------------------------------------------------------------------------------
 include:
-#  - 00_infra/resources/compute/clusters.yml
-#  - 00_infra/resources/compute/warehouses.yml
-#  - 00_infra/resources/secrets/secret_scopes.yml
-  - 03_orchestrate/resources/jobs/*.yml  
+  - 00_infra/resources/compute/clusters.yml
+  - 00_infra/resources/compute/warehouses.yml
+  - 00_infra/resources/secrets/secret_scopes.yml
+#  - 03_orchestrate/resources/jobs/*.yml  
 
 # ------------------------------------------------------------------------------
 # Bundle Variables
