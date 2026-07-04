@@ -1,10 +1,83 @@
 dbt_core:
-  target: dev
+  target: '{{ env_var("DBT_TARGET") }}'
   outputs:
+
+    # ------------------------------------------------------------------
+    # Local development — interactive OAuth login
+    # ------------------------------------------------------------------
+    dev-local:
+      type: databricks
+      host: "adb-2013382429548984.4.azuredatabricks.net"
+      http_path: "/sql/1.0/warehouses/c54f7d8208bbbdf9"
+      catalog: "{{ env_var('DBT_ENV') }}_raw"
+      schema: default
+      auth_type: oauth
+      threads: 4
+
+    # ------------------------------------------------------------------
+    # Databricks Job execution targets
+    # DBT_ACCESS_TOKEN is injected automatically by Databricks at runtime
+    # ------------------------------------------------------------------
     dev:
       type: databricks
-      host: https://adb-2013382429548984.4.azuredatabricks.net/
-      http_path: /sql/1.0/warehouses/ef6706a54e22acb7
-      auth_type: 'oauth'
-      catalog: analytics_dev_core
-      schema: dev
+      host: "adb-2013382429548984.4.azuredatabricks.net"
+      http_path: "/sql/1.0/warehouses/c54f7d8208bbbdf9"
+      catalog: "{{ env_var('DBT_ENV') }}_raw"
+      schema: default
+      token: "{{ env_var('DBT_ACCESS_TOKEN') }}"
+      threads: 4
+
+    uat:
+      type: databricks
+      host: "adb-2013382429548984.4.azuredatabricks.net"
+      http_path: "/sql/1.0/warehouses/70f73fadcc8987a4"
+      catalog: "{{ env_var('DBT_ENV') }}_raw"
+      schema: default
+      token: "{{ env_var('DBT_ACCESS_TOKEN') }}"
+      threads: 4
+
+    prod:
+      type: databricks
+      host: "adb-2013382429548984.4.azuredatabricks.net"
+      http_path: "/sql/1.0/warehouses/75ef5150673b8540"
+      catalog: "{{ env_var('DBT_ENV') }}_raw"
+      schema: default
+      token: "{{ env_var('DBT_ACCESS_TOKEN') }}"
+      threads: 4
+
+    # ------------------------------------------------------------------
+    # GitHub CI targets — SP auth via ARM credentials
+    # DBT_TARGET and DBT_ENV are always explicitly set in the pipeline
+    # ------------------------------------------------------------------
+    github_ci_dev:
+      type: databricks
+      host: "adb-dev-workspace.azuredatabricks.net"
+      http_path: "/sql/1.0/warehouses/your_dev_warehouse_http_path"
+      catalog: "{{ env_var('DBT_ENV') }}_raw"
+      schema: default
+      auth_type: oauth
+      threads: 4
+      client_id: '{{ env_var("DATABRICKS_CLIENT_ID") }}'
+      client_secret: '{{ env_var("DATABRICKS_CLIENT_SECRET") }}'
+
+    github_ci_uat:
+      type: databricks
+      host: "adb-2013382429548984.4.azuredatabricks.net"
+      http_path: "/sql/1.0/warehouses/your_uat_warehouse_http_path"
+      catalog: "{{ env_var('DBT_ENV') }}_raw"
+      schema: default
+      auth_type: oauth
+      threads: 4
+      client_id: '{{ env_var("DATABRICKS_CLIENT_ID") }}'
+      client_secret: '{{ env_var("DATABRICKS_CLIENT_SECRET") }}'
+
+    github_ci_prod:
+      type: databricks
+      host: "adb-prod-workspace.azuredatabricks.net"
+      http_path: "/sql/1.0/warehouses/your_prod_warehouse_http_path"
+      catalog: "{{ env_var('DBT_ENV') }}_raw"
+      schema: default
+      auth_type: oauth
+      threads: 4
+      client_id: '{{ env_var("DATABRICKS_CLIENT_ID") }}'
+      client_secret: '{{ env_var("DATABRICKS_CLIENT_SECRET") }}'

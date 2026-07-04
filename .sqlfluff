@@ -1,5 +1,4 @@
 [sqlfluff]
-exclude_rules = LT05, LT02
 templater = dbt
 dialect = databricks
 max_line_length = 150

@@ -14,9 +14,27 @@ Building a data platform on Databricks follows the same journey for every team. 
 
 When deploying locally, DABs runs in **development mode** - all resources are created with your username as a prefix, so you can configure, test, and tear down without affecting anyone else. Once you're happy, raise a PR and the CI/CD pipeline takes it from there.
 
-**A dbt Core project with a layered structure** - `staging → core → mart → curated` - pre-wired to your Databricks workspace. When running locally, schemas are automatically prefixed with your username so two engineers never overwrite each other's tables in development. In UAT and Production, plain schema names are used.
+**A dbt Core project with a layered folder structure** - `stage → core → mart → product` - ready for you to connect to your Databricks workspace and supply your dbt profile values. **When running locally, schemas are automatically prefixed with your username so two engineers never overwrite each other's tables in development. In UAT and Production, plain schema names are used.**
 
-**A folder structure ready for ingestion** - since Lakeflow Connect doesn't support all source systems, Lakester provides the structure for custom connectors or third-party services to plug into.
+**Project structure**
+
+Starting from the dev container, the repository is organised like this:
+
+```text
+.devcontainer/           - VS Code dev container setup and tooling
+.github/workflows/       - GitHub Actions CI/CD workflows
+azure_pipelines/         - Azure DevOps pipeline definitions
+docs/                    - documentation and implementation guides
+src/                     - Databricks project assets and bundle configuration
+  databricks.yml         - root Databricks bundle configuration
+  00_infra/              - infrastructure resources such as compute, secrets, and scopes
+  01_ingest/             - ingestion folders and connector patterns
+  02_transform/          - dbt Core project and transformation models
+  03_orchestrate/        - jobs and pipeline definitions
+.pre-commit-config.yaml  - pre-commit hooks for linting and formatting
+.sqlfluff/               - SQLFluff configuration for SQL linting
+README.md                - project overview and getting-started guide
+```
 
 **CI/CD pipelines for GitHub Actions and Azure DevOps** - PR validation, automatic Dev to UAT promotion, and Production release on tag.
 
@@ -79,6 +97,8 @@ databricks bundle destroy
 ---
 
 ## Documentation
+
+**[DABs Deployment Guide](./docs/dabs_guide.md)** - covers how to configure your environments in `databricks.yml`, how resources are defined, and how to validate and deploy using the Databricks CLI. Start here before deploying any infrastructure.
 
 **[Compute Selection & Sizing Guide](./docs/compute_selection_sizing_guide.md)** - not sure which compute type to use or how to size it? This guide tells you when to use SQL Warehouses vs All-Purpose Clusters, Classic vs Serverless, and what worker configuration to start with. Start here before creating any compute.
 

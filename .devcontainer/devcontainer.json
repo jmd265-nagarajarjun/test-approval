@@ -19,7 +19,7 @@
                 "ms-python.vscode-pylance",
                 "innoverio.vscode-dbt-power-user",
                 "ms-azuretools.vscode-docker",
-                "dorzey.vscode-sqlfluff",
+                "sqlfluff.vscode-sqlfluff",
                 "streetsidesoftware.code-spell-checker",
                 "eamodio.gitlens",
                 "wholroyd.jinja",
@@ -48,7 +48,8 @@
         "DATABRICKS_BUNDLE_ROOT": "/workspaces/${localWorkspaceFolderBasename}/src",
         "DBT_SEND_ANONYMOUS_USAGE_STATS": "False",
         "DBT_USER": "${localEnv:USER}",
-        "TARGET_ENV": "dev",
+        "DBT_TARGET": "dev-local",
+        "DBT_ENV": "dev",
         "DATABRICKS_SP_CLIENT_ID": "",
         "DATABRICKS_SP_CLIENT_SECRET": ""
     },

@@ -1,5 +1,5 @@
 dbt-core==1.11.11
-dbt-databricks==1.10.4
+dbt-databricks==1.12.1
 pre-commit
 sqlfluff
 sqlfluff-templater-dbt

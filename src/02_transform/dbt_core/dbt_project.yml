@@ -25,11 +25,24 @@ clean-targets:         # directories to be removed by `dbt clean`
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 
-# In this example config, we tell dbt to build all models in the example/
-# directory as views. These settings can be overridden in the individual model
-# files using the `{{ config(...) }}` macro.
 models:
   dbt_core:
-    # Config indicated by + and applies to all files under models/example/
-    example:
-      +materialized: view
+    +persist_docs:
+      relation: true
+      columns: true
+
+    02_stage:
+      +database: "{{ env_var('DBT_ENV') }}_stage"
+
+    03_core:
+      +database: "{{ env_var('DBT_ENV') }}_core"
+
+    04_mart:
+      +database: "{{ env_var('DBT_ENV') }}_mart"
+
+    05_product:
+      +database: "{{ env_var('DBT_ENV') }}_product"
+
+seeds:
+  dbt_core:
+    +database: "{{ env_var('DBT_ENV') }}_raw"

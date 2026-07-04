@@ -9,9 +9,10 @@ bundle:
 # Resource Files to Include
 # ------------------------------------------------------------------------------
 include:
-  - 00_infra/resources/compute/clusters.yml
-  - 00_infra/resources/compute/warehouses.yml
-  - 00_infra/resources/secrets/secret_scopes.yml
+#  - 00_infra/resources/compute/clusters.yml
+#  - 00_infra/resources/compute/warehouses.yml
+#  - 00_infra/resources/secrets/secret_scopes.yml
+  - 03_orchestrate/resources/jobs/*.yml  
 
 # ------------------------------------------------------------------------------
 # Bundle Variables
@@ -89,6 +90,54 @@ variables:
   #         WRITE  — read and write secrets to the scope
   #         MANAGE — full control including delete and manage permissions
 
+  # ----------------------------------------------------------------------------
+  # Job variables
+  # schedule_pause_status — PAUSED by default, UNPAUSED for uat and prod
+  # notification_emails   — empty by default, set per target for uat and prod
+  # job_permissions       — who can view, run, and manage jobs
+  # ----------------------------------------------------------------------------
+  schedule_pause_status:
+    description: Whether the job schedule is paused — PAUSED for dev-local and dev, UNPAUSED for uat and prod
+    default: PAUSED
+
+  notification_emails:
+    description: Email addresses to notify on job failure — empty for dev-local and dev, set per target for uat and prod
+    type: complex
+    default: []
+
+  job_permissions:
+    description: Permissions for jobs. No default — must be set per target.
+
+  # Levels: CAN_VIEW        — view job runs and results
+  #         CAN_MANAGE_RUN  — trigger and cancel runs
+  #         CAN_MANAGE      — full control including edit and delete
+
+  # ----------------------------------------------------------------------------
+  # dbt variables
+  # dbt_target — selects the dbt profile target (profiles.yml)
+  # dbt_env    — drives catalog naming (dbt_project.yml)
+  # dbt_user   — controls how dbt names schemas:
+  #                service_principal → uses the schema name as-is (used in all job runs)
+  #                <username>        → prefixes the schema with the username (used in local dev
+  #                                    so each developer gets their own isolated schemas)
+  #
+  # Defaults are set at the top level and only overridden for dev-local:
+  #   dbt_target → defaults to bundle.target (dev | uat | prod)
+  #   dbt_env    → defaults to bundle.target (dev | uat | prod)
+  #   dbt_user   → defaults to service_principal for all environments
+  # ----------------------------------------------------------------------------
+  dbt_target:
+    description: dbt profile target to use for job execution
+    default: ${bundle.target}
+
+  dbt_env:
+    description: Environment prefix for dbt catalog and database naming (dev | uat | prod)
+    default: ${bundle.target}
+
+  dbt_user:
+    description: dbt user for schema naming — service_principal for jobs, username for local dev
+    default: service_principal
+
 # ------------------------------------------------------------------------------
 # Deployment Targets / Environments
 # ------------------------------------------------------------------------------
@@ -105,6 +154,9 @@ targets:
       host: "https://adb-2013382429548984.4.azuredatabricks.net/"
       auth_type: azure-cli
     variables:
+      dbt_target: dev
+      dbt_env: dev
+      dbt_user: ${workspace.current_user.short_name}
       keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-lakester-dev-westeur-01/providers/Microsoft.KeyVault/vaults/kv-lake-dev-westeur-01"
       keyvault_dns_name: "https://kv-lake-dev-westeur-01.vault.azure.net/"
       cluster_permissions:
@@ -122,6 +174,11 @@ targets:
           level: READ
         - user_name: nagarajarjun@jmangroup.com
           level: MANAGE
+      job_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_MANAGE_RUN
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE          
 
   # ----------------------------------------------------------------------------
   # Dev — production mode, resources prefixed with "dev_"
@@ -150,6 +207,11 @@ targets:
           level: READ
         - user_name: nagarajarjun@jmangroup.com
           level: MANAGE
+      job_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_MANAGE_RUN
+        - user_name: nagarajarjun@jmangroup.com
+          level: CAN_MANAGE             
 
   # ----------------------------------------------------------------------------
   # UAT — PRO + serverless for transformation warehouse
@@ -160,24 +222,24 @@ targets:
       name_prefix: "${bundle.target}_"
     workspace:
       host: "https://adb-2013382429548984.4.azuredatabricks.net/"
-    variables:
+    variables:    
+      schedule_pause_status: UNPAUSED
+      notification_emails:
+        - nagarajarjun@jmangroup.com
       keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-lakester-dev-westeur-01/providers/Microsoft.KeyVault/vaults/kv-lake-dev-westeur-01"
       keyvault_dns_name: "https://kv-lake-dev-westeur-01.vault.azure.net/"
       cluster_permissions:
         - group_name: dsk_data_engineers
           level: CAN_ATTACH_TO
-        - user_name: nagarajarjun@jmangroup.com
-          level: CAN_MANAGE
       warehouse_permissions:
         - group_name: dsk_data_engineers
           level: CAN_USE
-        - user_name: nagarajarjun@jmangroup.com
-          level: CAN_MANAGE
       secret_scope_permissions:
         - group_name: dsk_data_engineers
           level: READ
-        - user_name: nagarajarjun@jmangroup.com
-          level: MANAGE
+      job_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_MANAGE_RUN         
 
   # ----------------------------------------------------------------------------
   # Production
@@ -189,6 +251,9 @@ targets:
     workspace:
       host: "https://adb-2013382429548984.4.azuredatabricks.net/"   # set your prod workspace URL here
     variables:
+      schedule_pause_status: UNPAUSED
+      notification_emails:
+        - nagarajarjun@jmangroup.com    
       keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-lakester-dev-westeur-01/providers/Microsoft.KeyVault/vaults/kv-lake-dev-westeur-01"
       keyvault_dns_name: "https://kv-lake-dev-westeur-01.vault.azure.net/"
       cluster_permissions:
@@ -200,3 +265,6 @@ targets:
       secret_scope_permissions:
         - group_name: dsk_data_engineers
           level: READ
+      job_permissions:
+        - group_name: dsk_data_engineers
+          level: CAN_MANAGE_RUN            
