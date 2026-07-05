@@ -21,7 +21,7 @@ dbt_core:
     dev:
       type: databricks
       host: "adb-2013382429548984.4.azuredatabricks.net"
-      http_path: "/sql/1.0/warehouses/c54f7d8208bbbdf9"
+      http_path: "/sql/1.0/warehouses/d186b0face80ee00"
       catalog: "{{ env_var('DBT_ENV') }}_raw"
       schema: default
       token: "{{ env_var('DBT_ACCESS_TOKEN') }}"
@@ -30,7 +30,7 @@ dbt_core:
     uat:
       type: databricks
       host: "adb-2013382429548984.4.azuredatabricks.net"
-      http_path: "/sql/1.0/warehouses/70f73fadcc8987a4"
+      http_path: "/sql/1.0/warehouses/adb32e4266a69f61"
       catalog: "{{ env_var('DBT_ENV') }}_raw"
       schema: default
       token: "{{ env_var('DBT_ACCESS_TOKEN') }}"
