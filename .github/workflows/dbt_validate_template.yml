@@ -39,6 +39,7 @@ jobs:
       # ------------------------------------------------------------------
       DBT_TARGET: ${{ inputs.dbt_target }}
       DBT_ENV: ${{ inputs.dbt_env }}
+      DBT_USER: service_principal
       DATABRICKS_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       DATABRICKS_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
 
