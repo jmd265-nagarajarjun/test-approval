@@ -19,7 +19,7 @@ jobs:
   # Runs pre-commit hooks and commit message validation
   # ----------------------------
   code-checks:
-    uses: ./.github/workflows/templates/code_checks.yml
+    uses: ./.github/workflows/code_checks_template.yml
 
   # ----------------------------
   # Step 2: dbt validation (dev)
@@ -27,7 +27,7 @@ jobs:
   # ----------------------------
   dbt-validate:
     needs: code-checks
-    uses: ./.github/workflows/templates/dbt_validate.yml
+    uses: ./.github/workflows/dbt_validate_template.yml
     with:
       dbt_target: github_ci_dev
       dbt_env: dev
@@ -41,7 +41,7 @@ jobs:
   # ----------------------------
   dabs-validate:
     needs: code-checks
-    uses: ./.github/workflows/templates/dabs.yml
+    uses: ./.github/workflows/dabs_template.yml
     with:
       environment: dev
       deploy: false

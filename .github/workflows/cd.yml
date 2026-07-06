@@ -19,7 +19,7 @@ jobs:
   # Runs in parallel with dbt validation
   # ----------------------------
   dabs-validate-prod:
-    uses: ./.github/workflows/templates/dabs.yml
+    uses: ./.github/workflows/dabs_template.yml
     with:
       environment: prod
       deploy: false
@@ -33,7 +33,7 @@ jobs:
   # Runs in parallel with DABS validation
   # ----------------------------
   dbt-validate-prod:
-    uses: ./.github/workflows/templates/dbt_validate.yml
+    uses: ./.github/workflows/dbt_validate_template.yml
     with:
       dbt_target: github_ci_prod
       dbt_env: prod
@@ -60,7 +60,7 @@ jobs:
   # ----------------------------
   deploy-prod:
     needs: approval
-    uses: ./.github/workflows/templates/dabs.yml
+    uses: ./.github/workflows/dabs_template.yml
     with:
       environment: prod
       deploy: true
