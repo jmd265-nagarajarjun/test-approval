@@ -1,0 +1,70 @@
+name: CD Pipeline
+
+# ----------------------------------------------------------------------
+# Purpose:
+#   - Triggered on version tags (v*)
+#   - Validates DABS bundle and dbt project against prod
+#   - Both validations must pass before approval gate
+#   - Deploys to prod after manual approval
+# ----------------------------------------------------------------------
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  # ----------------------------
+  # Step 1: DABS validation (prod)
+  # Runs in parallel with dbt validation
+  # ----------------------------
+  dabs-validate-prod:
+    uses: ./.github/workflows/templates/dabs.yml
+    with:
+      environment: prod
+      deploy: false
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.PROD_ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.PROD_ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+  # ----------------------------
+  # Step 2: dbt validation (prod)
+  # Runs in parallel with DABS validation
+  # ----------------------------
+  dbt-validate-prod:
+    uses: ./.github/workflows/templates/dbt_validate.yml
+    with:
+      dbt_target: github_ci_prod
+      dbt_env: prod
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.PROD_ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.PROD_ARM_CLIENT_SECRET }}
+
+  # ----------------------------
+  # Step 3: Approval gate
+  # Both DABS and dbt validation must pass before approval
+  # ----------------------------
+  approval:
+    needs:
+      - dabs-validate-prod
+      - dbt-validate-prod
+    runs-on: ubuntu-latest
+    environment: prod-approval
+    steps:
+      - run: echo "Approved for PROD deployment"
+
+  # ----------------------------
+  # Step 4: Deploy to PROD
+  # Only runs after approval
+  # ----------------------------
+  deploy-prod:
+    needs: approval
+    uses: ./.github/workflows/templates/dabs.yml
+    with:
+      environment: prod
+      deploy: true
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.PROD_ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.PROD_ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}

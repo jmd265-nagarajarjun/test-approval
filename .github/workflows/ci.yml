@@ -1,0 +1,73 @@
+name: CI - DEV/UAT
+
+# ----------------------------------------------------------------------
+# Purpose:
+#   - Triggered when a PR is merged into `main`
+#   - Deploys bundle to DEV
+#   - Validates dbt against UAT warehouse before deploying to UAT
+#   - Promotes to UAT after manual approval
+# ----------------------------------------------------------------------
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/00_infra/**'
+      - 'src/02_transform/**'
+      - 'src/03_orchestrate/**'
+
+jobs:
+  # ----------------------------
+  # Step 1: Deploy to DEV
+  # dbt already validated against dev in PR — no need to repeat
+  # ----------------------------
+  dev:
+    uses: ./.github/workflows/templates/dabs.yml
+    with:
+      environment: dev
+      deploy: true
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.DEV_ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.DEV_ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+  # ----------------------------
+  # Step 2: UAT approval gate
+  # Pauses until reviewer approves
+  # ----------------------------
+  uat-approval:
+    needs: dev
+    runs-on: ubuntu-latest
+    environment: uat-approval
+    steps:
+      - run: echo "Approved for UAT deployment"
+
+  # ----------------------------
+  # Step 3: dbt validation (uat)
+  # Validates against UAT warehouse before deploying
+  # ----------------------------
+  dbt-validate-uat:
+    needs: uat-approval
+    uses: ./.github/workflows/templates/dbt_validate.yml
+    with:
+      dbt_target: github_ci_uat
+      dbt_env: uat
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.UAT_ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.UAT_ARM_CLIENT_SECRET }}
+
+  # ----------------------------
+  # Step 4: Deploy to UAT
+  # Only runs after dbt validation passes
+  # ----------------------------
+  uat:
+    needs: dbt-validate-uat
+    uses: ./.github/workflows/templates/dabs.yml
+    with:
+      environment: uat
+      deploy: true
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.UAT_ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.UAT_ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}

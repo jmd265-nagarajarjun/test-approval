@@ -21,6 +21,10 @@ pr:
   branches:
     include:
       - main
+  paths:
+    include:
+      - src/00_infra/**
+      - src/03_orchestrate/*
 
 
 stages:

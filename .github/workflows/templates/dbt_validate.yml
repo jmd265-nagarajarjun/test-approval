@@ -1,0 +1,92 @@
+name: dbt - Validate Template
+
+# ----------------------------------------------------------------------
+# Purpose:
+#   - Reusable workflow for dbt project validation
+#   - Runs dbt deps, parse, and compile against the target environment
+#   - Called from PR, CI, and CD pipelines with different targets:
+#       PR check  → github_ci_dev  (validates against dev warehouse)
+#       CI (UAT)  → github_ci_uat  (validates against uat warehouse)
+#       CD (prod) → github_ci_prod (validates against prod warehouse)
+# ----------------------------------------------------------------------
+
+on:
+  workflow_call:
+    inputs:
+      dbt_target:
+        description: "dbt profile target (github_ci_dev | github_ci_uat | github_ci_prod)"
+        required: true
+        type: string
+
+      dbt_env:
+        description: "Environment prefix for catalog naming (dev | uat | prod)"
+        required: true
+        type: string
+
+    secrets:
+      ARM_CLIENT_ID:
+        required: true
+      ARM_CLIENT_SECRET:
+        required: true
+
+jobs:
+  dbt-validate:
+    runs-on: ubuntu-latest
+
+    env:
+      # ------------------------------------------------------------------
+      # dbt auth — ARM credentials mapped to Databricks client credentials
+      # ------------------------------------------------------------------
+      DBT_TARGET: ${{ inputs.dbt_target }}
+      DBT_ENV: ${{ inputs.dbt_env }}
+      DATABRICKS_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+
+      # ------------------------------------------------------------------
+      # dbt project paths — picked up automatically by dbt at runtime
+      # DBT_PROJECT_DIR  — root of the dbt project
+      # DBT_PROFILES_DIR — directory containing profiles.yml
+      # ------------------------------------------------------------------
+      DBT_PROJECT_DIR: src/02_transform/dbt_core
+      DBT_PROFILES_DIR: src/02_transform/dbt_core/.dbt
+
+    steps:
+      # --------------------------------------------------------------
+      # Checkout source code
+      # --------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      # --------------------------------------------------------------
+      # Setup Python
+      # --------------------------------------------------------------
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      # --------------------------------------------------------------
+      # Install dbt
+      # Pinned to same versions as the Databricks job to ensure
+      # consistent behaviour between CI validation and job execution
+      # --------------------------------------------------------------
+      - name: Install dbt
+        run: |
+          pip install \
+            dbt-core==1.11.11 \
+            dbt-databricks==1.12.1
+
+      # --------------------------------------------------------------
+      # dbt deps
+      # Installs packages defined in packages.yml
+      # --------------------------------------------------------------
+      - name: dbt deps
+        run: dbt deps
+
+      # --------------------------------------------------------------
+      # dbt compile
+      # Resolves all refs and compiles SQL against the target warehouse
+      # Catches environment-specific catalog and schema issues
+      # --------------------------------------------------------------
+      - name: dbt compile
+        run: dbt compile --target ${{ inputs.dbt_target }}

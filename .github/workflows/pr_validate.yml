@@ -3,9 +3,9 @@ name: PR - Validate
 # ----------------------------------------------------------------------
 # Purpose:
 #   - Triggered on Pull Requests targeting the `main` branch
-#   - Validates Databricks Asset Bundle configuration for the DEV environment
-#   - Checks bundle syntax, variable resolution, and resource definitions
-#   - Ensures any changes in `src/03_orchestrate/` are validated before merge
+#   - Runs code quality checks (pre-commit hooks, commit message lint)
+#   - Validates dbt project against dev environment
+#   - Validates DABS bundle configuration for dev
 # ----------------------------------------------------------------------
 
 on:
@@ -14,8 +14,34 @@ on:
       - main
 
 jobs:
-  validate-dev:
-    uses: ./.github/workflows/dabs_template.yml
+  # ----------------------------
+  # Step 1: Code quality checks
+  # Runs pre-commit hooks and commit message validation
+  # ----------------------------
+  code-checks:
+    uses: ./.github/workflows/templates/code_checks.yml
+
+  # ----------------------------
+  # Step 2: dbt validation (dev)
+  # Runs after code checks pass
+  # ----------------------------
+  dbt-validate:
+    needs: code-checks
+    uses: ./.github/workflows/templates/dbt_validate.yml
+    with:
+      dbt_target: github_ci_dev
+      dbt_env: dev
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.DEV_ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.DEV_ARM_CLIENT_SECRET }}
+
+  # ----------------------------
+  # Step 3: DABS validation (dev)
+  # Runs in parallel with dbt validation
+  # ----------------------------
+  dabs-validate:
+    needs: code-checks
+    uses: ./.github/workflows/templates/dabs.yml
     with:
       environment: dev
       deploy: false
