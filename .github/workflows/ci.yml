@@ -29,22 +29,11 @@ jobs:
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
   # ----------------------------
-  # Step 2: UAT approval gate
-  # Pauses until reviewer approves
-  # ----------------------------
-  uat-approval:
-    needs: dev
-    runs-on: ubuntu-latest
-    environment: uat-approval
-    steps:
-      - run: echo "Approved for UAT deployment"
-
-  # ----------------------------
-  # Step 3: dbt validation (uat)
+  # Step 2: dbt validation (uat)
   # Validates against UAT warehouse before deploying
   # ----------------------------
   dbt-validate-uat:
-    needs: uat-approval
+    needs: dev
     uses: ./.github/workflows/dbt_validate_template.yml
     with:
       dbt_target: github_ci_uat
@@ -54,11 +43,22 @@ jobs:
       ARM_CLIENT_SECRET: ${{ secrets.UAT_ARM_CLIENT_SECRET }}
 
   # ----------------------------
+  # Step 3: UAT approval gate
+  # Pauses until reviewer approves
+  # ----------------------------
+  uat-approval:
+    needs: dbt-validate-uat
+    runs-on: ubuntu-latest
+    environment: uat-approval
+    steps:
+      - run: echo "Approved for UAT deployment"
+
+  # ----------------------------
   # Step 4: Deploy to UAT
-  # Only runs after dbt validation passes
+  # Only runs after UAT approval and dbt validation passes
   # ----------------------------
   uat:
-    needs: dbt-validate-uat
+    needs: uat-approval
     uses: ./.github/workflows/dabs_template.yml
     with:
       environment: uat
