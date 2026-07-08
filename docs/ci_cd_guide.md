@@ -36,15 +36,26 @@ The pipeline flow is designed around three stages - validation, deployment to De
 ```
 Pull Request raised
         ↓
-pr-validate.yml - Validates bundle against Dev (no deployment)
+pr_validate.yml
+  • Code quality checks
+  • dbt validation (Dev)
+  • DABS validation (Dev)
         ↓
 Merged to main
         ↓
-ci.yml - Deploys to Dev, then UAT sequentially (UAT only runs if Dev succeeds)
+ci.yml
+  • Deploy to Dev
+  • dbt validation (UAT)
+  • Manual approval
+  • Deploy to UAT
         ↓
-Production release created using a tag (e.g. v1.0.0)
+(Release) Version tag pushed (e.g. v1.0.0)
         ↓
-cd.yml - Deploys to Production
+cd.yml
+  • dbt validation (Prod)
+  • DABS validation (Prod)
+  • Manual approval
+  • Deploy to Production
 ```
 
 ---
@@ -53,29 +64,41 @@ cd.yml - Deploys to Production
 
 Both GitHub Actions (`.github/workflows/`) and Azure DevOps (`azure_pipelines/`) pipelines are available and follow the same flow.
 
-### `pr-validate.yml` - PR Validation
+### `pr_validate.yml` - Pull Request Validation
 
-**Trigger:** Pull request targeting `main` with changes in `data_platform/03_orchestration/**`
+**Trigger:** Pull request targeting `main`
 
-Validates the bundle configuration against the Dev environment before any merge is allowed. This catches syntax errors, missing variables, and invalid resource definitions early - before they reach shared environments.
+Runs all automated validation before a pull request can be merged.
 
-It does **not** deploy anything.
+The workflow performs:
+
+- Code quality checks (Pre-commit hooks, SQLFluff, Ruff, YAML validation, etc.)
+- Commit message validation using Commitizen
+- dbt validation against the Dev environment
+- Declarative Automation Bundle validation against the Dev environment
+
+No resources are deployed during this pipeline.
 
 ### `ci.yml` - Dev & UAT Deployment
 
-**Trigger:** Merge to `main` with changes in `data_platform/03_orchestration/**`
+**Trigger:** Merge to `main`
 
-Deploys the bundle sequentially:
+Deploys the bundle through the promotion flow:
 
-1. Validates and deploys to **Dev**
-2. If Dev succeeds, validates and deploys to **UAT**
-3. If Dev fails, UAT deployment is skipped
+1. Deploys to Dev after validating changes in PR
+2. Validates dbt models against UAT after Dev deployment succeeds
+3. Waits for manual approval before promoting to UAT
+4. Deploys the bundle to UAT after approval
 
 ### `cd.yml` - Production Deployment
 
 **Trigger:** New tag pushed matching `v*` (e.g. `v1.0.0`, `v2.1.0`)
 
-Deploys the bundle to **Production**. This is intentionally decoupled from the CI pipeline - a tag must be created and pushed manually to trigger a Production deployment.
+Runs production validation and deployment flow:
+
+1. Validates the DABS bundle and dbt project against Production in parallel
+2. Waits for manual approval after both validations succeed
+3. Deploys the bundle to Production after approval
 
 To deploy to Production:
 
@@ -83,6 +106,27 @@ To deploy to Production:
 git tag v1.0.0
 git push origin v1.0.0
 ```
+
+### `code_checks_template.yml` - Reusable Workflow
+
+A reusable workflow that performs code quality and repository checks before changes are merged.
+
+It runs:
+
+- Pre-commit hooks defined in `.pre-commit-config.yaml`
+- SQLFluff validation
+- Ruff linting
+- YAML validation
+- Trailing whitespace checks
+- Commit message validation using Commitizen
+
+| Input | Description |
+|---|---|
+| None | This workflow does not require any inputs |
+
+The workflow is used for:
+
+- Pull request validation before merging changes into `main`
 
 ### `dabs_template.yml` - Reusable Workflow
 
@@ -96,6 +140,19 @@ A reusable workflow that handles bundle validation, plan, and deployment. All ot
 | `deploy` | `true` to validate and deploy, `false` to validate only |
 
 ---
+
+### `dbt_validate_template.yml` - Reusable Workflow
+
+**Trigger:** Called by other pipelines (`workflow_call`)
+
+A reusable workflow that validates dbt models against the target environment.
+
+All pipelines call this template and pass the required dbt target configuration.
+
+| Input | Description |
+|---|---|
+| `dbt_target` | dbt target profile to validate against |
+| `dbt_env` | Environment being validated (`dev`, `uat`, `prod`) |
 
 ## Approval Gates
 

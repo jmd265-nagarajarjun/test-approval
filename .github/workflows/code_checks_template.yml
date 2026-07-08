@@ -10,10 +10,22 @@ name: Code Checks Template
 
 on:
   workflow_call:
+    secrets:
+      ARM_CLIENT_ID:
+        required: true
+      ARM_CLIENT_SECRET:
+        required: true
 
 jobs:
   code-checks:
     runs-on: ubuntu-latest
+
+    env:
+      DBT_TARGET: github_ci_dev
+      DBT_ENV: dev
+      DBT_USER: service_principal
+      DATABRICKS_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
 
     steps:
       # --------------------------------------------------------------
@@ -43,6 +55,8 @@ jobs:
       # --------------------------------------------------------------
       - name: Run pre-commit hooks
         uses: pre-commit/action@v3.0.1
+        env:
+          SKIP: sqlfluff-fix
 
       # --------------------------------------------------------------
       # Validate commit messages (Commitizen)

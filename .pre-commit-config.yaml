@@ -19,9 +19,7 @@ repos:
     hooks:
       - id: ruff-check
         args: ["--fix"]
-        exclude: "src/03_orchestrate/notebooks/.*"
       - id: ruff-format
-        exclude: "\\.ipynb$"
 
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v3.13.0

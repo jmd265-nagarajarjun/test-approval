@@ -4,6 +4,7 @@ Building a data platform on Databricks follows the same journey for every team. 
 
 **Lakester picks up from Compute and gets you the rest, ready to go.**
 
+
 ---
 
 ## What Lakester Gives You

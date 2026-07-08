@@ -2,45 +2,63 @@
 # Pipeline: PR - Validate
 # Purpose:
 #   - Triggered on Pull Requests targeting main
+#   - Runs code quality checks (pre-commit hooks, commit message lint)
+#   - Validates dbt project against dev environment
 #   - Validates Databricks Asset Bundle for DEV
 #   - Does NOT deploy
 #
 # IMPORTANT:
-#   Requires Variable Group:
-#     DEV-Databricks-Secrets
-#
-#   Variable Group must contain:
-#     - ARM_CLIENT_ID     (secret)
-#     - ARM_CLIENT_SECRET (secret)
-#     - ARM_TENANT_ID     (secret)
+#   Requires Variable Groups:
+#     DEV-Databricks-Secrets → ARM_CLIENT_ID, ARM_CLIENT_SECRET
+#     ARM-Tenant             → ARM_TENANT_ID
 # ==============================================================
 
-trigger: none   # No push trigger
+trigger: none
 
 pr:
   branches:
     include:
       - main
-  paths:
-    include:
-      - src/00_infra/**
-      - src/03_orchestrate/*
-
 
 stages:
 
-# ======================================================
-# PR Validation Stage
-# ======================================================
-- stage: PR_VALIDATE
-  displayName: "PR - Validate Bundle (DEV)"
+  # ============================================================
+  # Stage 1 — Code Quality Checks
+  # ============================================================
+  - stage: CODE_CHECKS
+    displayName: "Code Quality Checks"
 
-  variables:
-  - group: DEV-Databricks-Secrets
-  - group: ARM-Tenant
+    jobs:
+      - template: templates/code_checks.yml
+        parameters:
+          baseRef: main
 
-  jobs:
-  - template: dabs_template.yml
-    parameters:
-      environment: dev
-      deploy: false
+  # ============================================================
+  # Stage 2 — dbt + DABS Validation (DEV)
+  # Runs after code checks pass
+  # ============================================================
+  - stage: VALIDATE_DEV
+    displayName: "Validate DEV"
+    dependsOn: CODE_CHECKS
+    condition: succeeded('CODE_CHECKS')
+
+    variables:
+      - group: DEV-Databricks-Secrets
+      - group: ARM-Tenant
+
+    jobs:
+      # dbt validation against dev warehouse
+      - template: templates/dbt_validate.yml
+        parameters:
+          dbtTarget: github_ci_dev
+          dbtEnv: dev
+          armClientId: $(DEV_ARM_CLIENT_ID)
+          armClientSecret: $(DEV_ARM_CLIENT_SECRET)
+
+      # DABS validation against dev — runs in parallel with dbt
+      - template: templates/dabs.yml
+        parameters:
+          environment: dev
+          deploy: false
+          armClientId: $(DEV_ARM_CLIENT_ID)
+          armClientSecret: $(DEV_ARM_CLIENT_SECRET)
