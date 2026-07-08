@@ -12,7 +12,7 @@ include:
   - 00_infra/resources/compute/clusters.yml
   - 00_infra/resources/compute/warehouses.yml
   - 00_infra/resources/secrets/secret_scopes.yml
-  - 03_orchestrate/resources/jobs/*.yml  
+  - 03_orchestrate/resources/jobs/*.yml
 
 # ------------------------------------------------------------------------------
 # Bundle Variables
@@ -178,7 +178,7 @@ targets:
         - group_name: dsk_data_engineers
           level: CAN_MANAGE_RUN
         - user_name: nagarajarjun@jmangroup.com
-          level: CAN_MANAGE          
+          level: CAN_MANAGE
 
   # ----------------------------------------------------------------------------
   # Dev — production mode, resources prefixed with "dev_"
@@ -211,7 +211,7 @@ targets:
         - group_name: dsk_data_engineers
           level: CAN_MANAGE_RUN
         - user_name: nagarajarjun@jmangroup.com
-          level: CAN_MANAGE             
+          level: CAN_MANAGE
 
   # ----------------------------------------------------------------------------
   # UAT — PRO + serverless for transformation warehouse
@@ -222,7 +222,7 @@ targets:
       name_prefix: "${bundle.target}_"
     workspace:
       host: "https://adb-2013382429548984.4.azuredatabricks.net/"
-    variables:    
+    variables:
       schedule_pause_status: UNPAUSED
       notification_emails:
         - nagarajarjun@jmangroup.com
@@ -239,7 +239,7 @@ targets:
           level: READ
       job_permissions:
         - group_name: dsk_data_engineers
-          level: CAN_MANAGE_RUN         
+          level: CAN_MANAGE_RUN
 
   # ----------------------------------------------------------------------------
   # Production
@@ -253,7 +253,7 @@ targets:
     variables:
       schedule_pause_status: UNPAUSED
       notification_emails:
-        - nagarajarjun@jmangroup.com    
+        - nagarajarjun@jmangroup.com
       keyvault_resource_id: "/subscriptions/b1939b25-807e-43a4-8f19-c1055b6d8fc4/resourceGroups/rg-lakester-dev-westeur-01/providers/Microsoft.KeyVault/vaults/kv-lake-dev-westeur-01"
       keyvault_dns_name: "https://kv-lake-dev-westeur-01.vault.azure.net/"
       cluster_permissions:
@@ -267,4 +267,4 @@ targets:
           level: READ
       job_permissions:
         - group_name: dsk_data_engineers
-          level: CAN_MANAGE_RUN            
+          level: CAN_MANAGE_RUN

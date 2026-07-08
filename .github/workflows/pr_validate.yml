@@ -20,6 +20,9 @@ jobs:
   # ----------------------------
   code-checks:
     uses: ./.github/workflows/code_checks_template.yml
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.DEV_ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.DEV_ARM_CLIENT_SECRET }}
 
   # ----------------------------
   # Step 2: dbt validation (dev)

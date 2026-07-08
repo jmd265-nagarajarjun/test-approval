@@ -1,0 +1,83 @@
+# ==============================================================
+# Pipeline: CI - DEV/UAT
+# Purpose:
+#   - Triggered when changes are pushed to main
+#   - Deploys bundle to DEV
+#   - Validates dbt against UAT warehouse before deploying to UAT
+#   - Promotes to UAT after manual approval
+#
+# IMPORTANT:
+#   Requires Variable Groups:
+#     DEV-Databricks-Secrets → ARM_CLIENT_ID, ARM_CLIENT_SECRET
+#     UAT-Databricks-Secrets → ARM_CLIENT_ID, ARM_CLIENT_SECRET
+#     ARM-Tenant             → ARM_TENANT_ID
+# ==============================================================
+
+trigger:
+  branches:
+    include:
+      - main
+
+stages:
+
+  # ============================================================
+  # Stage 1 — Deploy to DEV
+  # dbt already validated against dev in PR — no need to repeat
+  # ============================================================
+  - stage: DEV
+    displayName: "Deploy to DEV"
+
+    variables:
+      - group: DEV-Databricks-Secrets
+      - group: ARM-Tenant
+
+    jobs:
+      - template: templates/dabs.yml
+        parameters:
+          environment: dev
+          deploy: true
+          armClientId: $(DEV_ARM_CLIENT_ID)
+          armClientSecret: $(DEV_ARM_CLIENT_SECRET)
+
+  # ============================================================
+  # Stage 2 — dbt Validation (UAT)
+  # Validates against UAT warehouse before deploying
+  # ============================================================
+  - stage: VALIDATE_UAT
+    displayName: "Validate UAT"
+    dependsOn: DEV
+    condition: succeeded('DEV')
+
+    variables:
+      - group: UAT-Databricks-Secrets
+      - group: ARM-Tenant
+
+    jobs:
+      - template: templates/dbt_validate.yml
+        parameters:
+          dbtTarget: github_ci_uat
+          dbtEnv: uat
+          armClientId: $(UAT_ARM_CLIENT_ID)
+          armClientSecret: $(UAT_ARM_CLIENT_SECRET)
+
+  # ============================================================
+  # Stage 3 — Deploy to UAT
+  # Approval gate + deployment — runs after dbt validation passes
+  # ============================================================
+  - stage: UAT
+    displayName: "Deploy to UAT"
+    dependsOn: VALIDATE_UAT
+    condition: succeeded('VALIDATE_UAT')
+
+    variables:
+      - group: UAT-Databricks-Secrets
+      - group: ARM-Tenant
+
+    jobs:
+      - template: templates/dabs.yml
+        parameters:
+          environment: uat
+          environmentResource: uat-approval
+          deploy: true
+          armClientId: $(UAT_ARM_CLIENT_ID)
+          armClientSecret: $(UAT_ARM_CLIENT_SECRET)

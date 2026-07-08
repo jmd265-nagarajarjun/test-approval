@@ -1,0 +1,66 @@
+# ==============================================================
+# Template: code_checks_template.yml
+# Purpose:
+#   - Reusable template for code quality checks
+#   - Runs pre-commit hooks (SQLFluff, Ruff, trailing whitespace etc.)
+#   - Validates commit message format (Conventional Commits via Commitizen)
+#   - Only called from PR pipeline — no need to repeat in CI/CD
+# ==============================================================
+
+parameters:
+  - name: baseRef
+    type: string
+    default: main
+
+jobs:
+  - job: code_checks
+    displayName: "Code Quality Checks"
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+      # --------------------------------------------------------------
+      # Checkout source code
+      # fetchDepth: 0 needed to access full commit history
+      # for commit message validation
+      # --------------------------------------------------------------
+      - checkout: self
+        fetchDepth: 0
+
+      # --------------------------------------------------------------
+      # Setup Python
+      # --------------------------------------------------------------
+      - task: UsePythonVersion@0
+        displayName: "Setup Python"
+        inputs:
+          versionSpec: '3.11'
+
+      # --------------------------------------------------------------
+      # Install pre-commit
+      # --------------------------------------------------------------
+      - script: pip install pre-commit
+        displayName: "Install pre-commit"
+
+      # --------------------------------------------------------------
+      # Run pre-commit hooks
+      # Runs all hooks defined in .pre-commit-config.yaml
+      # Covers SQLFluff, Ruff, trailing whitespace, yaml checks etc.
+      # Note: commitizen commit-msg stage is not triggered here —
+      # it is validated separately below
+      # --------------------------------------------------------------
+      - script: pre-commit run --all-files
+        displayName: "Run pre-commit hooks"
+
+      # --------------------------------------------------------------
+      # Validate commit messages (Commitizen)
+      # Checks all commits in the PR follow Conventional Commits format
+      # Runs separately since commitizen uses commit-msg stage
+      # which pre-commit does not trigger in CI
+      # --------------------------------------------------------------
+      - script: pip install commitizen
+        displayName: "Install Commitizen"
+
+      - script: |
+          git fetch origin ${{ parameters.baseRef }}
+          cz check --rev-range origin/${{ parameters.baseRef }}..HEAD
+        displayName: "Validate commit messages (Commitizen)"

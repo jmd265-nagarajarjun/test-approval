@@ -1,0 +1,89 @@
+# ==============================================================
+# Pipeline: CD Pipeline
+# Purpose:
+#   - Triggered automatically when a new tag is pushed
+#   - Validates DABS bundle and dbt project against prod
+#   - Both validations must pass before approval gate
+#   - Deploys to prod after manual approval
+#
+# IMPORTANT:
+#   Requires Variable Groups:
+#     PROD-Databricks-Secrets → ARM_CLIENT_ID, ARM_CLIENT_SECRET
+#     ARM-Tenant              → ARM_TENANT_ID
+# ==============================================================
+
+trigger:
+  tags:
+    include:
+      - 'v*'
+
+stages:
+
+  # ============================================================
+  # Stage 1 — Validate PROD
+  # DABS and dbt validation run in parallel
+  # ============================================================
+  - stage: VALIDATE_PROD
+    displayName: "Validate PROD"
+
+    variables:
+      - group: PROD-Databricks-Secrets
+      - group: ARM-Tenant
+
+    jobs:
+      # DABS validation against prod
+      - template: templates/dabs.yml
+        parameters:
+          environment: prod
+          deploy: false
+          armClientId: $(PROD_ARM_CLIENT_ID)
+          armClientSecret: $(PROD_ARM_CLIENT_SECRET)
+
+      # dbt validation against prod warehouse — runs in parallel
+      - template: templates/dbt_validate.yml
+        parameters:
+          dbtTarget: github_ci_prod
+          dbtEnv: prod
+          armClientId: $(PROD_ARM_CLIENT_ID)
+          armClientSecret: $(PROD_ARM_CLIENT_SECRET)
+
+  # ============================================================
+  # Stage 2 — Approval Gate
+  # Both validations must pass before approval
+  # ============================================================
+  - stage: PROD_APPROVAL
+    displayName: "Approve PROD Deployment"
+    dependsOn: VALIDATE_PROD
+    condition: succeeded('VALIDATE_PROD')
+
+    jobs:
+      - deployment: Approval
+        displayName: "Wait for PROD approval"
+        environment: prod-approval
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Approved for PROD deployment"
+
+  # ============================================================
+  # Stage 3 — Deploy to PROD
+  # ============================================================
+  - stage: PROD_DEPLOY
+    displayName: "Deploy to PROD"
+    dependsOn: PROD_APPROVAL
+    condition: succeeded('PROD_APPROVAL')
+
+    variables:
+      - group: PROD-Databricks-Secrets
+      - group: ARM-Tenant
+
+    jobs:
+      - template: templates/dabs.yml
+        parameters:
+          environment: prod
+          deploy: true
+          armClientId: $(PROD_ARM_CLIENT_ID)
+          armClientSecret: $(PROD_ARM_CLIENT_SECRET)
